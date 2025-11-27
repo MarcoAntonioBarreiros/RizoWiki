@@ -1,0 +1,2704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RizoWiki</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class', 
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        bio: {
+                            dark: 'var(--bg-dark)',   
+                            panel: 'var(--bg-panel)',  
+                            surface: 'var(--bg-surface)', 
+                            accent: '#0ea5e9', 
+                            leaf: '#22c55e',   
+                            soil: '#f97316',   
+                            purple: '#d946ef', 
+                            gold: '#eab308',   
+                            red: '#ef4444',    
+                            pink: '#ec4899',   
+                            indigo: '#6366f1', 
+                        },
+                        slate: {
+                            850: '#1e293b', 
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* VARIÁVEIS DE TEMA */
+        :root {
+            --bg-dark: #050816;
+            --bg-panel: #0f172a;
+            --bg-surface: #1e293b;
+            --text-main: #cbd5e1;
+            --text-head: #ffffff;
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --nav-bg: rgba(5, 8, 22, 0.9);
+        }
+
+        /* MODO CLARO (Override) */
+        html.light-mode {
+            --bg-dark: #f1f5f9; /* Slate-100 */
+            --bg-panel: #ffffff;
+            --bg-surface: #e2e8f0;
+            --text-main: #334155; /* Slate-700 */
+            --text-head: #0f172a; /* Slate-900 */
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(203, 213, 225, 0.4); /* Slate-300 */
+            --nav-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body { background-color: var(--bg-dark); color: var(--text-main); overflow-x: hidden; font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        
+        /* Section Logic */
+        .view-section { display: none; width: 100%; min-height: 100vh; padding-top: 90px; padding-bottom: 60px; opacity: 0; transition: opacity 0.4s ease; }
+        .view-section.active-view { display: block !important; opacity: 1; animation: fadeIn 0.5s ease-out forwards; }
+
+        /* UI Components */
+        .neon-btn { position: relative; background: var(--glass-bg); border: 1px solid var(--glass-border); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
+        .neon-btn:hover { background: var(--bg-surface); transform: translateX(8px); border-color: var(--glass-border); }
+        .neon-bar { width: 8px; height: 45px; border-radius: 999px; position: absolute; left: 24px; top: 50%; transform: translateY(-50%); background-color: #02040a; box-shadow: 0 0 12px var(--glow-color), 0 0 25px var(--glow-color); border: 1px solid var(--glow-color); opacity: 0.9; }
+        
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1); }
+        
+        .wiki-title { font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.1; font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.03em; color: var(--text-head); }
+        .wiki-text { font-size: clamp(0.95rem, 2vw, 1.1rem); line-height: 1.7; color: var(--text-main); margin-bottom: 1.5rem; }
+        
+        .flow-node { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 1rem 1.5rem; border-radius: 999px; text-align: center; min-width: 140px; transition: all 0.3s; }
+        /* Light Mode fix for Nodes */
+        html.light-mode .flow-node { background: #ffffff; border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        
+        .flow-node:hover { transform: scale(1.05); border-color: var(--text-main); }
+        .flow-node strong { display: block; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.2rem; color: var(--text-main); opacity: 0.7; }
+        
+        .nav-link.active { color: #0ea5e9; position: relative; }
+        .nav-link.active::after { content:''; position: absolute; bottom: -24px; left: 0; width: 100%; height: 3px; background-color: #0ea5e9; box-shadow: 0 -5px 10px rgba(14,165,233,0.5); }
+
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(155,155,155,0.3); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(155,155,155,0.5); }
+
+        /* Lightbox */
+        #lightbox { transition: opacity 0.3s ease; }
+        #lightbox.active { opacity: 1; pointer-events: all; }
+        #lightbox img { max-height: 85vh; max-width: 90vw; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        #lightbox-caption { color: #ffffff !important; }
+
+        /* Diagrama Styles */
+        .bacterium { position: absolute; width: 6px; height: 12px; border-radius: 9999px; background-color: #5eead4; opacity: 0.9; box-shadow: 0 0 8px rgba(45, 212, 191, 1); pointer-events: none; mix-blend-mode: plus-lighter; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+        html.light-mode .bacterium { mix-blend-mode: multiply; background-color: #0f766e; box-shadow: none; }
+        
+        .hotspot-btn .icon-circle { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .mech-block { opacity: 0; transform: translateY(20px); transition: all 0.5s ease; }
+        .mech-block.visible { opacity: 1; transform: translateY(0); }
+        .active-mech { box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        html.light-mode .active-mech { box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+
+        /* SPOTLIGHT EFFECT CSS */
+        #spotlight-overlay {
+            background-color: rgba(2, 6, 23, 0.65); /* Escuro */
+            backdrop-filter: blur(6px); /* Desfoque */
+            transition: opacity 0.5s ease;
+            /* Máscara radial */
+            -webkit-mask-image: radial-gradient(circle at var(--x, 50%) var(--y, 50%), transparent 50px, black 150px);
+            mask-image: radial-gradient(circle at var(--x, 50%) var(--y, 50%), transparent 50px, black 150px);
+            pointer-events: none;
+        }
+        #spotlight-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* REACT SCROLLBARS (do mapa conceitual) */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 0.8);
+        }
+
+        /* Light Mode Overrides for Utility Classes */
+        html.light-mode .text-white { color: #1e293b !important; }
+        html.light-mode .text-gray-400 { color: #475569 !important; }
+        html.light-mode .text-gray-300 { color: #334155 !important; }
+        
+        /* Box Correction for Light Mode (Outer Boxes) */
+        html.light-mode .bg-white\/5 { 
+            background-color: #ffffff !important; 
+            border-color: #e2e8f0 !important; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+        }
+        
+        /* Box Correction for Light Mode (Inner Dark Boxes in Factors) */
+        html.light-mode .bg-black\/40 {
+            background-color: #f1f5f9 !important; /* Light Gray */
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+
+        html.light-mode .border-white\/10 { border-color: #cbd5e1 !important; }
+        html.light-mode .border-white\/5 { border-color: #e2e8f0 !important; }
+        
+        html.light-mode nav { background-color: var(--nav-bg) !important; border-bottom-color: rgba(0,0,0,0.05); }
+		@media (max-width: 768px) {
+    .md\:hidden.transform.translate-y-full {
+        transform: translateY(100%) !important; /* garante que fique fora da viewport */
+    }
+}
+
+
+        /* Keyframes RESTAURADOS */
+        @keyframes move-0 { 0% { transform: translate(0, 0) rotate(0deg); } 25% { transform: translate(10px, -10px) rotate(90deg); } 50% { transform: translate(-5px, 15px) rotate(45deg); } 75% { transform: translate(15px, 5px) rotate(180deg); } 100% { transform: translate(0, 0) rotate(360deg); } }
+        @keyframes move-1 { 0% { transform: translate(0, 0) rotate(0deg); } 33% { transform: translate(-15px, 10px) rotate(-45deg); } 66% { transform: translate(10px, -15px) rotate(30deg); } 100% { transform: translate(0, 0) rotate(0deg); } }
+        @keyframes move-2 { 0% { transform: translate(0, 0) rotate(0deg); } 25% { transform: translate(8px, 12px) rotate(20deg); } 50% { transform: translate(-12px, -8px) rotate(-90deg); } 75% { transform: translate(12px, 12px) rotate(45deg); } 100% { transform: translate(0, 0) rotate(0deg); } }
+        @keyframes move-3 { 0% { transform: translate(0, 0) rotate(0deg); } 40% { transform: translate(-12px, -12px) rotate(-30deg); } 80% { transform: translate(15px, 18px) rotate(60deg); } 100% { transform: translate(0, 0) rotate(0deg); } }
+        @keyframes move-4 { 0% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(20px, -20px) rotate(90deg); } 100% { transform: translate(0, 0) rotate(180deg); } }
+		
+		
+    
+/* Fix logo overlap with top navbar on mobile */
+@media(max-width:768px){
+  #view-hero { padding-top: 160px !important; }
+}
+
+/* Increase bubble chart container height on mobile to avoid legend clipping */
+@media(max-width:768px){
+  #view-lab .h-\[50vh\] { height: 65vh !important; }
+}
+
+
+/* Ajuste seletor RAIO (bubble) no mobile: evita texto cortado */
+@media (max-width: 768px) {
+  #axisR {
+    font-size: 0.8rem !important;
+    white-space: normal !important;
+  }
+}
+
+        /* CORREÇÃO PARA MENUS SELECT (DARK MODE) */
+        select option {
+            background-color: #0f172a; /* Fundo escuro */
+            color: #ffffff;            /* Texto branco */
+        }
+        
+        /* CORREÇÃO PARA MENUS SELECT (LIGHT MODE) */
+        html.light-mode select option {
+            background-color: #ffffff;
+            color: #334155;
+        }
+
+        /* --- ANIMAÇÃO DE FLUXO SEQUENCIAL --- */
+        @keyframes glowFlow {
+            0%, 100% { 
+                box-shadow: 0 0 0 transparent; 
+                border-color: var(--glass-border); 
+                transform: scale(1);
+                background: rgba(255, 255, 255, 0.03);
+            }
+            50% { 
+                box-shadow: 0 0 25px var(--glow-color); 
+                border-color: var(--glow-color); 
+                transform: scale(1.05);
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+/* --- ESTILOS DO NOVO MAPA (SOLVER V6) --- */
+.glass-card-map {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+html.light-mode .glass-card-map { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+.glass-card-map:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(16, 185, 129, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.15);
+}
+html.light-mode .glass-card-map:hover { background: #f8fafc; border-color: #10b981; }
+
+.phase { opacity: 0; pointer-events: none; height: 0; overflow: hidden; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+.phase.active { opacity: 1; pointer-events: auto; height: auto; overflow: visible; }
+
+.connector-line { width: 2px; background: linear-gradient(to bottom, #10b981, rgba(16, 185, 129, 0.1)); margin: 0 auto; height: 0; }
+.connector-line.grow { animation: drawLine 0.8s ease-out forwards; }
+
+.tech-badge {
+    font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 8px;
+    border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+    color: #94a3b8; font-family: 'Space Grotesk', sans-serif;
+}
+html.light-mode .tech-badge { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); color: #475569; }
+/* --- REFINAMENTO FINAL DE CORES E LEGIBILIDADE (MODO CLARO) --- */
+
+/* 1. Conserto do Fundo e Texto Ilegível no Cabeçalho do Protocolo */
+/* Transforma o fundo cinza escuro em Branco Sólido com sombra suave */
+html.light-mode #phase-3 .bg-black\/30 {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 20px 50px -10px rgba(0,0,0,0.1) !important;
+}
+/* Conserta o subtítulo que estava impossível de ler */
+html.light-mode #phase-3 p.text-slate-400 {
+    color: #64748b !important; /* Cinza médio bem legível */
+}
+/* Título "Protocolo Técnico..." em preto */
+html.light-mode #phase-3 h4.text-white {
+    color: #0f172a !important;
+}
+
+/* 2. Trazendo as Cores de Volta para os Cards de Protocolo (Fase 3) */
+/* Usamos seletores inteligentes para detectar a cor do card e aplicar um tom pastel */
+
+/* Vermelho (Crítico) */
+html.light-mode #p3-list > div[class*="red"] {
+    background-color: #fef2f2 !important; /* Vermelho bem clarinho */
+    border: 1px solid #fca5a5 !important; /* Borda vermelha visível */
+}
+html.light-mode #p3-list > div[class*="red"] i { color: #dc2626 !important; }
+
+/* Roxo (Dosagem) */
+html.light-mode #p3-list > div[class*="purple"] {
+    background-color: #faf5ff !important;
+    border: 1px solid #d8b4fe !important;
+}
+html.light-mode #p3-list > div[class*="purple"] i { color: #9333ea !important; }
+
+/* Esmeralda/Verde (Estratégia) */
+html.light-mode #p3-list > div[class*="emerald"] {
+    background-color: #ecfdf5 !important;
+    border: 1px solid #6ee7b7 !important;
+}
+html.light-mode #p3-list > div[class*="emerald"] i { color: #059669 !important; }
+
+/* Laranja (Aplicação) */
+html.light-mode #p3-list > div[class*="orange"] {
+    background-color: #fff7ed !important;
+    border: 1px solid #fdba74 !important;
+}
+html.light-mode #p3-list > div[class*="orange"] i { color: #ea580c !important; }
+
+/* Amarelo (Avisos) */
+html.light-mode #p3-list > div[class*="yellow"] {
+    background-color: #fefce8 !important;
+    border: 1px solid #fde047 !important;
+}
+html.light-mode #p3-list > div[class*="yellow"] i { color: #ca8a04 !important; }
+
+/* Azul (Padrão) */
+html.light-mode #p3-list > div[class*="blue"] {
+    background-color: #eff6ff !important;
+    border: 1px solid #93c5fd !important;
+}
+html.light-mode #p3-list > div[class*="blue"] i { color: #2563eb !important; }
+
+/* Força os textos de dentro dos cards a ficarem escuros */
+html.light-mode #p3-list h5 { color: #1e293b !important; }
+html.light-mode #p3-list p { color: #475569 !important; }
+
+/* 3. Melhorando os Cards de Microrganismos (Fase 2) */
+/* Dá um efeito de profundidade e mantém a borda superior colorida */
+html.light-mode #p2-grid .glass-card-map {
+    background: #ffffff !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e2e8f0 !important;
+    /* A borda colorida superior (border-t-2) é mantida automaticamente pelo JS */
+}
+/* Efeito ao passar o mouse */
+html.light-mode #p2-grid .glass-card-map:hover {
+    background: #f8fafc !important;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+/* Badges (Tipo, Temp) mais visíveis */
+html.light-mode .tech-badge {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+    font-weight: bold;
+}
+html.light-mode .tech-badge.text-emerald-400 {
+    color: #059669 !important; /* Verde mais escuro para leitura */
+    background-color: #ecfdf5 !important;
+    border-color: #6ee7b7 !important;
+}
+/* --- UPGRADE VISUAL: CARDS DE ORGANISMOS (FASE 2 - MODO CLARO) --- */
+
+/* 1. O Card em si: Mais profundidade e acabamento premium */
+html.light-mode #p2-grid .glass-card-map {
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%) !important; /* Degradê sutil */
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important; /* Cantos mais arredondados */
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.02) !important; /* Sombra suave */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Efeito Hover: O card "flutua" quando passa o mouse */
+html.light-mode #p2-grid .glass-card-map:hover {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    transform: translateY(-5px) !important;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04) !important;
+}
+
+/* 2. Títulos e Textos */
+/* Nome da Espécie (ex: Priestia megaterium) - Mais peso e cor escura */
+html.light-mode #p2-grid h4 {
+    color: #1e293b !important;
+    font-size: 1.25rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Nome da Cepa (ex: CNPMS B119) - Estilo "Rótulo Técnico" */
+html.light-mode #p2-grid span.text-slate-500 {
+    color: #64748b !important;
+    font-weight: 700 !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.05em !important;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Descrição (ex: Produz ácido...) - Separador pontilhado elegante */
+html.light-mode #p2-grid p {
+    color: #475569 !important;
+    font-weight: 500 !important;
+    border-top: 1px dashed #cbd5e1 !important; /* Linha pontilhada no lugar da sólida */
+    padding-top: 12px !important;
+    margin-top: 12px !important;
+}
+
+/* 3. Badges (Tags no canto direito) - Estilo Pílula Colorida */
+
+/* Badge Padrão (Tipo: Bactéria, Fungo...) */
+html.light-mode .tech-badge {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 99px !important; /* Formato pílula */
+    padding: 4px 10px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+}
+
+/* Badge de Temperatura (Verde) - Destaque visual */
+html.light-mode .tech-badge.text-emerald-400 {
+    background-color: #ecfdf5 !important; /* Fundo menta */
+    color: #059669 !important; /* Texto verde escuro */
+    border: 1px solid #a7f3d0 !important;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15) !important; /* Brilho verde suave */
+}
+
+/* ============================
+   PATCH VISUAL PREMIUM – MAPA
+   ============================ */
+
+/* CARD BASE */
+#solver-grid .solver-card,
+#solver-grid .glass-card-map {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 18px !important;
+    backdrop-filter: blur(22px) !important;
+    box-shadow: 0 10px 35px -10px rgba(0,0,0,0.45) !important;
+    transition: all 0.35s ease !important;
+}
+
+/* HOVER */
+#solver-grid .solver-card:hover,
+#solver-grid .glass-card-map:hover {
+    transform: translateY(-6px) !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+    box-shadow: 
+        0 12px 40px -12px rgba(16,185,129,0.25),
+        0 0 25px rgba(16,185,129,0.25) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ÍCONE DO CARD */
+#solver-grid .solver-card i,
+#solver-grid .glass-card-map i {
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.18)) !important;
+    opacity: 0.9 !important;
+}
+
+/* TÍTULO */
+#solver-grid .solver-card h3,
+#solver-grid .glass-card-map h3 {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+}
+
+/* DESCRIÇÃO */
+#solver-grid .solver-card p,
+#solver-grid .glass-card-map p {
+    color: #cbd5e1 !important;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+}
+
+/* ANIMAÇÃO SUAVE AO APARECER */
+#solver-grid .solver-card,
+#solver-grid .glass-card-map {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: mapFadeUp 0.6s forwards ease-out;
+}
+
+@keyframes mapFadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================================
+   MODO CLARO – ajuste automático
+   ================================ */
+html.light-mode #solver-grid .solver-card,
+html.light-mode #solver-grid .glass-card-map {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow:
+        0 4px 10px rgba(0,0,0,0.04),
+        0 2px 4px rgba(0,0,0,0.02) !important;
+}
+
+html.light-mode #solver-grid .solver-card:hover,
+html.light-mode #solver-grid .glass-card-map:hover {
+    background: #f8fafc !important;
+    border-color: #10b981 !important;
+    transform: translateY(-6px) !important;
+    box-shadow:
+        0 14px 30px -8px rgba(16,185,129,0.18),
+        0 4px 10px rgba(0,0,0,0.03) !important;
+}
+
+html.light-mode #solver-grid h3 {
+    color: #0f172a !important;
+}
+
+html.light-mode #solver-grid p {
+    color: #475569 !important;
+}
+
+/* === SLIDER STYLES PARA O NOVO LABORATÓRIO === */
+input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+input[type=range]:focus { outline: none; }
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ef4444; cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+</style>
+</head>
+<body class="antialiased selection:bg-bio-accent selection:text-white">
+
+    <div id="lightbox" class="fixed inset-0 z-[100] bg-black/95 opacity-0 pointer-events-none flex flex-col items-center justify-center p-4 backdrop-blur-sm" onclick="closeLightbox()">
+        <button class="absolute top-6 right-6 text-white/50 hover:text-white text-4xl focus:outline-none">&times;</button>
+        <img id="lightbox-img" src="" alt="Full View" class="rounded-md mb-4 object-contain max-h-[80vh] border border-white/10">
+        <div id="lightbox-caption" class="text-lg md:text-xl font-display font-bold tracking-wide text-center max-w-3xl bg-black/60 px-6 py-3 rounded-full border border-white/10 backdrop-blur-md"></div>
+    </div>
+
+    <nav class="fixed top-0 w-full z-50 bg-[var(--nav-bg)] backdrop-blur-xl border-b border-white/5 shadow-2xl transition-colors duration-300">
+        <div class="container mx-auto px-4 md:px-6 h-20 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer group" onclick="switchView('hero')">
+                <div class="h-10 w-auto flex items-center justify-center overflow-hidden rounded-full">
+                    <img src="assets/logo fixtec.png" alt="Fixtec Logo" class="h-full w-auto object-cover scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+                </div>
+                <span class="font-display font-bold text-xl tracking-tight text-[var(--text-head)] group-hover:text-bio-accent transition-colors ml-2">Rizo<span class="text-bio-leaf">Wiki</span></span>
+            </div>
+            
+            <div class="flex items-center gap-4 md:gap-8">
+                <div class="hidden md:flex gap-6 md:gap-10 text-[10px] md:text-xs font-bold text-gray-500 tracking-[0.15em] items-center">
+                    <button onclick="switchView('hero')" class="nav-link hover:text-[var(--text-head)] py-2 active" id="nav-hero"><i class="fas fa-home text-lg"></i></button>
+                    <button onclick="switchView('holobionte')" class="nav-link hover:text-bio-accent py-2 flex flex-col items-center" id="nav-holobionte"><i class="fas fa-network-wired text-lg md:hidden mb-1"></i><span class="hidden md:inline">HOLOBIONTE</span></button>
+                    <button onclick="switchView('wiki')" class="nav-link hover:text-bio-accent py-2 flex flex-col items-center" id="nav-wiki"><i class="fas fa-book text-lg md:hidden mb-1"></i><span class="hidden md:inline">WIKI</span></button>
+                    <button onclick="switchView('fundamentos')" class="nav-link hover:text-bio-gold py-2 flex flex-col items-center" id="nav-fundamentos"><i class="fas fa-layer-group text-lg md:hidden mb-1"></i><span class="hidden md:inline">FUNDAMENTOS</span></button>
+                    <button onclick="switchView('mapping')" class="nav-link hover:text-bio-soil py-2 flex flex-col items-center" id="nav-mapping"><i class="fas fa-project-diagram text-lg md:hidden mb-1"></i><span class="hidden md:inline">MAPA</span></button>
+                    <button onclick="switchView('factors')" class="nav-link hover:text-bio-red py-2 flex flex-col items-center" id="nav-factors"><i class="fas fa-exclamation-triangle text-lg md:hidden mb-1"></i><span class="hidden md:inline">FATORES</span></button>
+                    <button onclick="switchView('lab')" class="nav-link hover:text-bio-leaf py-2 flex flex-col items-center" id="nav-lab"><i class="fas fa-flask text-lg md:hidden mb-1"></i><span class="hidden md:inline">LAB</span></button>
+                </div>
+                
+                <button onclick="toggleTheme()" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-[var(--text-head)] border border-white/10">
+                    <i class="fas fa-sun hidden dark-icon"></i>
+                    <i class="fas fa-moon light-icon"></i>
+                </button>
+            </div>
+        </div>
+        <div class="md:hidden flex justify-around py-3 bg-[var(--bg-panel)] border-t border-white/5 absolute bottom-0 w-full transform translate-y-full">
+             <button onclick="switchView('hero')" class="text-gray-500 hover:text-bio-accent"><i class="fas fa-home"></i></button>
+             <button onclick="switchView('holobionte')" class="text-gray-500 hover:text-bio-accent"><i class="fas fa-network-wired"></i></button>
+             <button onclick="switchView('wiki')" class="text-gray-500 hover:text-bio-accent"><i class="fas fa-book"></i></button>
+             <button onclick="switchView('fundamentos')" class="text-gray-500 hover:text-bio-gold"><i class="fas fa-layer-group"></i></button>
+             <button onclick="switchView('mapping')" class="text-gray-500 hover:text-bio-soil"><i class="fas fa-project-diagram"></i></button>
+             <button onclick="switchView('factors')" class="text-gray-500 hover:text-bio-red"><i class="fas fa-exclamation-triangle"></i></button>
+             <button onclick="switchView('lab')" class="text-gray-500 hover:text-bio-leaf"><i class="fas fa-flask"></i></button>
+        </div>
+    </nav>
+
+    <section id="view-hero" class="view-section active-view relative flex items-center justify-center">
+        <div class="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-bio-accent/10 to-transparent blur-[150px] pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-3/4 h-1/2 bg-gradient-to-t from-bio-leaf/5 to-transparent blur-[150px] pointer-events-none"></div>
+        
+        <div class="container mx-auto px-6 relative z-10 text-center">
+            <div class="flex justify-center mb-10 animate-fade-in">
+                <div class="rounded-full overflow-hidden h-40 w-40 md:h-56 md:w-56 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.15)]">
+                    <img src="assets/logo fixtec.png" alt="Fixtec Logo" class="h-full w-full object-cover scale-105 hover:scale-110 transition-transform duration-500">
+                </div>
+            </div>
+
+            <div class="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-bio-leaf text-xs font-bold tracking-[0.2em] uppercase mb-6 shadow-2xl backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-bio-leaf animate-pulse"></span>
+                Manual Técnico 2025
+            </div>
+            <h1 class="font-display text-5xl md:text-8xl font-bold text-white mb-8 leading-[0.9] tracking-tighter animate-fade-in">
+                Biotecnologia <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-bio-leaf via-bio-accent to-bio-purple">Regenerativa</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 leading-relaxed mb-12 max-w-3xl mx-auto font-light animate-fade-in" style="animation-delay: 0.1s;">
+                Explorando a inteligência microbiológica para restaurar ecossistemas agrícolas, maximizar a eficiência nutricional e garantir a sustentabilidade produtiva através de bioinsumos avançados.
+            </p>
+            <div class="flex flex-col md:flex-row justify-center gap-6 animate-fade-in" style="animation-delay: 0.2s;">
+                <button onclick="switchView('holobionte')" class="px-10 py-5 bg-bio-accent hover:bg-bio-accent/80 text-white text-lg font-bold rounded-xl shadow-[0_10px_40px_-10px_rgba(14,165,233,0.5)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3">
+                    <i class="fas fa-network-wired"></i> Explorar Mapa Conceitual
+                </button>
+                <button onclick="switchView('wiki')" class="px-10 py-5 bg-transparent hover:bg-white/5 text-white text-lg font-bold rounded-xl border border-white/20 transition-all flex items-center justify-center gap-3">
+                    <i class="fas fa-book-open"></i> Acessar Wiki 2025
+                </button>
+            </div>
+            
+            <div class="mt-16 max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 items-center justify-center">
+                <div class="hidden lg:flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
+                    <img src="assets/ufpr.png" alt="UFPR" class="h-16 w-auto object-contain drop-shadow-md filter dark:invert-0 invert brightness-0 dark:brightness-100">
+                </div>
+
+                <div class="flex-1 text-left p-8 rounded-2xl bg-white/5 border border-white/10 w-full relative">
+                    <p class="text-gray-400 italic text-sm md:text-base leading-relaxed">
+                        "Inoculantes microbianos consolidam uma estratégia capaz de reduzir a dependência de fertilizantes minerais, amenizar impactos ambientais e explorar a biodiversidade microbiana da rizosfera. Estirpes de Bacillus, Pseudomonas, fixadores associativos, Rhizobium, fungos promotores e bactérias fotossintéticas atuam em pontos distintos da fisiologia vegetal."
+                    </p>
+                </div>
+
+                <div class="hidden lg:flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
+                    <img src="assets/logo-microagro-horizontal.png" alt="INCT" class="h-12 w-auto object-contain drop-shadow-md">
+                </div>
+
+                <div class="flex lg:hidden gap-8 items-center justify-center opacity-80 w-full pt-4 border-t border-white/5">
+                    <img src="assets/ufpr.png" alt="UFPR" class="h-12 w-auto object-contain filter dark:invert-0 invert brightness-0 dark:brightness-100">
+                    <img src="assets/logo-microagro-horizontal.png" alt="INCT" class="h-10 w-auto object-contain">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="view-holobionte" class="view-section bg-bio-dark" style="padding-left:0; padding-right:0;">
+        <div id="root-holobionte"></div>
+    </section>
+
+    <section id="view-wiki" class="view-section bg-bio-dark">
+        <div class="container mx-auto px-4 md:px-6 h-full flex flex-col">
+            <div class="flex items-center gap-6 mb-10">
+                <div class="w-2 h-16 bg-gradient-to-b from-bio-leaf to-bio-accent rounded-full shadow-[0_0_30px_rgba(14,165,233,0.6)]"></div>
+                <div>
+                    <h2 class="font-display text-4xl md:text-6xl text-white font-bold tracking-tight">Wiki de Cepas</h2>
+                    <p class="text-gray-400 text-sm md:text-base font-light tracking-widest uppercase">Atualizado: Manual Técnico 2025</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 flex-grow overflow-hidden">
+                <div class="w-full lg:w-1/4 flex lg:flex-col gap-4 overflow-x-auto lg:overflow-y-auto pb-4 lg:pb-0 no-scrollbar pr-2 h-full" id="wiki-nav">
+                    </div>
+                
+                <div class="w-full lg:w-3/4 relative h-full">
+                    <div class="glass-panel rounded-[2rem] p-6 md:p-12 h-full border-t-[1px] border-white/10 transition-all shadow-2xl custom-scroll overflow-y-auto bg-bio-panel" id="wiki-content">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="view-fundamentos" class="view-section bg-bio-dark">
+        <div class="container mx-auto px-4 md:px-6">
+            <h2 class="font-display text-4xl md:text-5xl text-white font-bold mb-6">Fundamentos dos Inoculantes</h2>
+            <p class="text-xl text-gray-400 mb-12 max-w-4xl">Fatores básicos que determinam o sucesso da biotecnologia agrícola.</p>
+
+            <div class="flex flex-col lg:flex-row gap-8 mb-16 items-stretch">
+                
+                <div class="w-full lg:w-7/12 relative">
+                    <div class="w-full bg-[#0b1221] border-4 border-white/5 rounded-2xl p-2 shadow-[0_0_50px_rgba(34,197,94,0.1)] h-full relative overflow-hidden">
+                        <div class="absolute top-6 left-0 right-0 z-20 text-center pointer-events-none">
+                            <div class="inline-block bg-[#0f172a]/80 backdrop-blur-md px-5 py-2 rounded-full shadow-lg border border-white/10">
+                                <h3 class="text-gray-200 font-bold text-sm tracking-tight flex items-center gap-2 uppercase">
+                                    <i data-lucide="microscope" class="w-4 h-4 text-bio-leaf"></i> Diagrama de Ação PGPR
+                                </h3>
+                            </div>
+                        </div>
+
+                        <div id="diagram-container" class="relative w-full h-full min-h-[500px] rounded-xl overflow-hidden bg-white group">
+                            <img src="assets/diagram plant cropped.png" alt="Planta no Solo" class="absolute inset-0 w-full h-full object-cover z-0">
+                            
+                            <div id="bacteria-cloud" class="absolute inset-0 pointer-events-none overflow-hidden z-10"></div>
+                            
+                            <div id="spotlight-overlay" class="absolute inset-0 z-20 opacity-0 transition-opacity duration-500"></div>
+                            
+                            <button onclick="resetPanel()" class="absolute top-4 right-4 z-40 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white p-2 rounded-full transition-all opacity-0 pointer-events-none transform scale-90 hover:scale-100 shadow-xl" id="btn-reset-view" title="Resetar Visão">
+                                <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                            </button>
+
+                            <div id="hotspots-layer" class="absolute inset-0 z-30"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-5/12">
+                    <div id="details-panel" class="glass-panel p-8 lg:p-12 rounded-[2rem] h-full flex flex-col justify-center border border-white/10 relative overflow-hidden transition-all duration-500 shadow-2xl">
+                        <div id="panel-default" class="text-center flex flex-col items-center animate-fade-in">
+                            <div class="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 border border-white/10">
+                                <i data-lucide="touchpad" class="w-8 h-8 text-gray-400"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white mb-3">Explore o Sistema</h3>
+                            <p class="text-gray-400 text-lg leading-relaxed">Selecione um dos pontos interativos na imagem ao lado para visualizar os mecanismos fisiológicos detalhados.</p>
+                        </div>
+
+                        <div id="panel-content" class="hidden opacity-0 transition-all duration-500 transform translate-y-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span id="panel-tag" class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border">TAG</span>
+                            </div>
+                            <h3 id="panel-title" class="text-3xl md:text-4xl font-display font-bold text-white mb-6 leading-tight">Título do Mecanismo</h3>
+                            
+                            <div class="w-full h-px bg-gradient-to-r from-white/20 to-transparent mb-6"></div>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <span class="text-bio-accent font-bold text-xs uppercase tracking-widest mb-2 block"><i class="fas fa-cogs mr-2"></i> Como Funciona</span>
+                                    <p id="panel-desc" class="text-gray-300 text-lg leading-relaxed font-light">Descrição detalhada do mecanismo.</p>
+                                </div>
+                                
+                                <div class="bg-white/5 p-5 rounded-xl border border-white/10">
+                                    <span class="text-bio-leaf font-bold text-xs uppercase tracking-widest mb-2 block"><i class="fas fa-check-circle mr-2"></i> Impacto Agronômico</span>
+                                    <p id="panel-impact" class="text-white text-sm font-medium">Impacto prático na lavoura.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
+                <div class="glass-panel p-8 rounded-[2rem] border-l-8 border-bio-accent hover:bg-[#151f32] transition-all">
+                    <div class="flex items-center gap-4 mb-6">
+                        <i class="fas fa-cloud-sun text-4xl text-bio-accent"></i>
+                        <h3 id="fund-amb-title" class="text-white font-bold text-2xl">Ambiente</h3>
+                    </div>
+                    <p id="fund-amb-text" class="text-gray-300 leading-relaxed text-lg">pH, textura, fósforo disponível, salinidade e regime hídrico determinam a colonização e o desempenho da estirpe.</p>
+                </div>
+
+                <div class="glass-panel p-8 rounded-[2rem] border-l-8 border-bio-leaf hover:bg-[#151f32] transition-all">
+                    <div class="flex items-center gap-4 mb-6">
+                        <i class="fas fa-tractor text-4xl text-bio-leaf"></i>
+                        <h3 id="fund-man-title" class="text-white font-bold text-2xl">Manejo</h3>
+                    </div>
+                    <p id="fund-man-text" class="text-gray-300 leading-relaxed text-lg">Compatibilidade com insumos, proteção UV, tempo entre inoculação e semeadura e formulação afetam a sobrevivência do inóculo.</p>
+                </div>
+
+                <div class="glass-panel p-8 rounded-[2rem] border-l-8 border-bio-purple hover:bg-[#151f32] transition-all">
+                    <div class="flex items-center gap-4 mb-6">
+                        <i class="fas fa-cogs text-4xl text-bio-purple"></i>
+                        <h3 id="fund-mec-title" class="text-white font-bold text-2xl">Mecanismos</h3>
+                    </div>
+                    <p id="fund-mec-text" class="text-gray-300 leading-relaxed text-lg">FBN, solubilização de P, sideróforos, AIA/giberelinas, biocontrole e indução de resistência sistêmica.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="view-mapping" class="view-section bg-bio-dark">
+    <div class="container mx-auto px-4 md:px-6">
+        
+        <div class="text-center mb-12 animate-fade-in">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-4">
+                Sistema de Decisão Agronômica
+            </div>
+            <h2 class="font-display text-4xl md:text-6xl text-white font-bold mb-4">
+                RizoWiki <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">Solver</span>
+            </h2>
+            <p class="text-slate-400 font-light max-w-2xl mx-auto">
+                Diagnóstico profundo: Mecanismo, Agentes (Cepas) e Protocolo Técnico detalhado.
+            </p>
+        </div>
+
+        <div id="solver-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-700 pb-20"></div>
+
+        <div id="solution-layer" class="hidden mt-4 pb-20">
+            <button onclick="resetSolverGrid()" class="mb-6 flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition-colors text-xs uppercase tracking-widest font-bold">
+                <i class="fas fa-arrow-left"></i> Voltar ao Painel
+            </button>
+
+            <div class="glass-panel rounded-[2rem] p-8 md:p-12 relative overflow-hidden min-h-[800px]">
+                <div class="absolute -top-20 -right-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div id="phase-1" class="phase active">
+                    <div class="max-w-4xl mx-auto text-center">
+                        <div id="p1-header"></div>
+                        <div id="p1-text" class="text-slate-300 text-xl font-light leading-relaxed mb-8"></div>
+                        
+                        <div class="inline-flex items-center justify-center p-4 bg-white/5 rounded-2xl border border-white/5 gap-8 mb-8">
+                            <div class="text-center"><span class="block text-[10px] text-slate-500 uppercase tracking-widest">Alvo Molecular</span><span id="p1-mol" class="text-emerald-400 font-mono text-sm"></span></div>
+                            <div class="w-px h-8 bg-white/10"></div>
+                            <div class="text-center"><span class="block text-[10px] text-slate-500 uppercase tracking-widest">Ação Principal</span><span id="p1-action" class="text-blue-400 font-mono text-sm"></span></div>
+                        </div>
+
+                        <div>
+                            <button onclick="nextPhase(2)" class="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                                <span>Selecionar Agentes Biológicos</span>
+                                <i class="fas fa-arrow-down group-hover:translate-y-1 transition-transform"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="conn-1" class="connector-line h-20 my-6 opacity-0"></div>
+
+                <div id="phase-2" class="phase">
+                    <div class="flex items-center gap-4 mb-8 justify-center">
+                        <div class="h-px bg-white/10 w-20"></div>
+                        <h3 class="font-display font-bold text-slate-400 uppercase tracking-widest text-xs">Definição dos Organismos (Wiki Specs)</h3>
+                        <div class="h-px bg-white/10 w-20"></div>
+                    </div>
+                    <div id="p2-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"></div>
+                    <div class="text-center">
+                        <button onclick="nextPhase(3)" class="group relative inline-flex items-center gap-2 px-6 py-3 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 transition-all font-medium text-sm uppercase tracking-wide">
+                            <span>Gerar Protocolo Operacional</span>
+                            <i class="fas fa-chevron-down group-hover:translate-y-1 transition-transform"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="conn-2" class="connector-line h-20 my-6 opacity-0"></div>
+
+                <div id="phase-3" class="phase">
+                    <div class="bg-black/30 rounded-3xl p-8 border border-white/10 mt-4 shadow-2xl relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
+                            <div>
+                                <h4 class="font-display font-bold text-white text-2xl mb-1">Protocolo Técnico de Campo</h4>
+                                <p class="text-slate-400 text-sm">Diretrizes obrigatórias para eficácia agronômica (Baseado na Wiki).</p>
+                            </div>
+                        </div>
+                        
+                        <div id="p3-list" class="flex flex-col gap-4"></div>
+                        
+                        <div class="mt-8 pt-6 border-t border-white/5 flex items-center gap-4 text-xs text-slate-500 bg-white/5 p-4 rounded-xl">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 shrink-0"></i>
+                            <p><strong>Aviso Legal:</strong> A eficiência dos biológicos depende estritamente das condições de umidade (>60% CC), temperatura (<32°C) e ausência de químicos tóxicos no tanque.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+    <section id="view-factors" class="view-section bg-bio-dark">
+        <div class="container mx-auto px-4 md:px-6">
+            <h2 class="font-display text-4xl md:text-5xl text-white font-bold mb-6">Fatores Críticos</h2>
+            <p class="text-xl text-gray-400 mb-12 max-w-4xl">Variáveis ocultas e Boas Práticas de Aplicação (Manual 2025).</p>
+
+            <div class="mb-16">
+                <h4 class="text-bio-leaf font-bold uppercase tracking-widest text-sm mb-6"><i class="fas fa-check-circle mr-2"></i> Guia de Boas Práticas</h4>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10 hover:border-bio-leaf/50 transition-all">
+                        <i class="fas fa-tint text-3xl text-bio-accent mb-4"></i>
+                        <h5 class="text-white font-bold mb-2">Umidade</h5>
+                        <p class="text-gray-400 text-sm">Água é o veículo da vida. Aplique sempre em solo úmido.</p>
+                    </div>
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10 hover:border-bio-soil/50 transition-all">
+                        <i class="fas fa-sun text-3xl text-bio-soil mb-4"></i>
+                        <h5 class="text-white font-bold mb-2">Sombra</h5>
+                        <p class="text-gray-400 text-sm">UV mata bactérias em >20min. Proteja da luz direta e calor.</p>
+                    </div>
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10 hover:border-bio-red/50 transition-all">
+                        <i class="fas fa-flask text-3xl text-bio-red mb-4"></i>
+                        <h5 class="text-white font-bold mb-2">Químicos</h5>
+                        <p class="text-gray-400 text-sm">Fungicidas e alta salinidade são letais. Evite mistura direta.</p>
+                    </div>
+                    <div class="bg-white/5 p-6 rounded-2xl border border-white/10 hover:border-bio-purple/50 transition-all">
+                        <i class="fas fa-thermometer-half text-3xl text-bio-purple mb-4"></i>
+                        <h5 class="text-white font-bold mb-2">Armazenamento</h5>
+                        <p class="text-gray-400 text-sm">Condições inadequadas comprometem a vida útil e eficácia.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h4 class="text-gray-500 font-bold uppercase tracking-widest text-sm mb-6"><i class="fas fa-search mr-2"></i> Variáveis Ocultas</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-12">
+                <div class="glass-panel p-10 rounded-[2rem] border-l-8 border-bio-purple hover:bg-[#151f32] transition-all">
+                    <div class="flex items-center gap-5 mb-6">
+                        <i class="fas fa-prescription-bottle text-bio-purple text-4xl"></i>
+                        <h3 class="text-white font-bold text-2xl">O Paradoxo da Dose</h3>
+                    </div>
+                    <p class="text-gray-300 text-lg mb-8 leading-relaxed">
+                        Mais nem sempre é melhor. Inoculantes de soja exigem <strong>10<sup>9</sup> UFC</strong> para vencer a competição, enquanto *S. meliloti* em linhaça atinge eficácia máxima com <strong>10<sup>4</sup> UFC</strong> (doses maiores são supressoras).
+                    </p>
+                    <div class="flex justify-between bg-black/40 p-6 rounded-2xl border border-white/5">
+                        <div class="text-center"><div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Soja</div><div class="text-bio-leaf font-bold text-3xl font-mono">10<sup>9</sup></div></div>
+                        <div class="text-gray-600 font-bold text-xl self-center">vs</div>
+                        <div class="text-center"><div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Linhaça</div><div class="text-bio-purple font-bold text-3xl font-mono">10<sup>4</sup></div></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-10 rounded-[2rem] border-l-8 border-bio-soil hover:bg-[#151f32] transition-all">
+                    <div class="flex items-center gap-5 mb-6">
+                        <i class="fas fa-map-marker-alt text-bio-soil text-4xl"></i>
+                        <h3 class="text-white font-bold text-2xl">Efeito "Terroir"</h3>
+                    </div>
+                    <p class="text-gray-300 text-lg mb-8 leading-relaxed">
+                        A mesma co-inoculação (B119 + B2084) teve resultados díspares em locais com tipos de solo diferentes, provando a influência da fertilidade nativa.
+                    </p>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="bg-black/40 p-5 rounded-2xl border-b-4 border-bio-leaf">
+                            <div class="text-xs text-gray-500 uppercase mb-1">Sete Lagoas</div><div class="text-3xl font-bold text-white">+24%</div>
+                        </div>
+                        <div class="bg-black/40 p-5 rounded-2xl border-b-4 border-gray-600 opacity-60">
+                            <div class="text-xs text-gray-500 uppercase mb-1">Sto. Antônio</div><div class="text-3xl font-bold text-white">+11%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-10 rounded-[2rem] border-l-8 border-bio-gold hover:bg-[#151f32] transition-all">
+                    <div class="flex items-center gap-5 mb-6">
+                        <i class="fas fa-dna text-bio-gold text-4xl"></i>
+                        <h3 class="text-white font-bold text-2xl">Milho "Sierra Mixe"</h3>
+                    </div>
+                    <p class="text-gray-300 text-lg mb-6 leading-relaxed">
+                        Variedade mexicana que produz mucilagem rica em açúcar nas raízes aéreas, abrigando um microbioma diazotrófico único.
+                    </p>
+                    <div class="space-y-3 text-gray-400">
+                        <div class="flex items-center gap-3"><i class="fas fa-check text-bio-gold"></i> Fixação de N atmosférico</div>
+                        <div class="flex items-center gap-3"><i class="fas fa-check text-bio-gold"></i> 500+ bactérias isoladas</div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-10 rounded-[2rem] border-l-8 border-bio-red hover:bg-[#151f32] transition-all">
+                    <div class="flex items-center gap-5 mb-6">
+                        <i class="fas fa-exclamation-triangle text-bio-red text-4xl"></i>
+                        <h3 class="text-white font-bold text-2xl">Crise de Viabilidade</h3>
+                    </div>
+                    <p class="text-gray-300 text-lg mb-6 leading-relaxed">
+                        Bactérias fotossintéticas e não-esporulantes sofrem colapso rápido sem proteção osmótica (Turfa/Polímeros).
+                    </p>
+                    <div class="w-full bg-gray-800 h-4 rounded-full mt-8 mb-2 relative overflow-hidden">
+                        <div class="absolute h-full bg-bio-leaf w-full"></div>
+                        <div class="absolute h-full bg-bio-red w-[10%] shadow-[0_0_20px_rgba(239,68,68,0.8)] z-10"></div>
+                    </div>
+                    <div class="flex justify-between text-xs font-mono font-bold tracking-widest"><span class="text-bio-leaf">10<sup>12</sup> (Indústria)</span><span class="text-bio-red">10<sup>4</sup> (Campo)</span></div>
+                </div>
+            </div>
+        </div>
+    
+<!-- SIMULADOR DINÂMICO -->
+<div id="simulador-fatores-container" class="mt-2 w-full"></div>
+<div id="simulador-fatores-container" class="mt-2 w-full"></div>
+
+<div id="analytics-container" class="mt-8 w-full mb-20"></div>
+</section>
+
+    <!-- NOVA SEÇÃO LAB (SUBSTITUÍDA) -->
+    <section id="view-lab" class="view-section bg-bio-dark">
+         <div class="container mx-auto px-4 md:px-6 h-full flex flex-col">
+            
+            <div class="mb-8 border-b border-white/10 pb-6 flex flex-col md:flex-row justify-between items-end gap-6">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold tracking-widest uppercase mb-2">
+                        <i class="fas fa-microscope"></i> Simulador Fisiológico v3.5 (Final)
+                    </div>
+                    <h2 class="font-display text-4xl md:text-5xl text-white font-bold mb-2">Engenharia de Inoculantes</h2>
+                    <p class="text-gray-400 max-w-2xl">Simule o comportamento microbiológico sob stress. Visualização aprimorada (Glassmorphism).</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="glass-panel p-4 rounded-xl border-l-4 border-blue-500">
+                    <label class="tech-label text-blue-400">Eixo X (Ambiente)</label>
+                    <select id="axisX" class="bg-black/30 text-white text-sm font-bold rounded-lg w-full p-2 outline-none border border-white/10 focus:border-blue-500 transition-colors cursor-pointer" onchange="updateBubbleChart()">
+                        <option value="temp">Temperatura Ótima (°C)</option>
+                        <option value="ph">pH Ideal</option>
+                    </select>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border-l-4 border-purple-500">
+                    <label class="tech-label text-purple-400">Eixo Y (Performance)</label>
+                    <select id="axisY" class="bg-black/30 text-white text-sm font-bold rounded-lg w-full p-2 outline-none border border-white/10 focus:border-purple-500 transition-colors cursor-pointer" onchange="updateBubbleChart()">
+                        <option value="conc">Log Concentração (UFC/mL)</option>
+                        <option value="cost">Custo Metabólico (ATP)</option>
+                    </select>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border-l-4 border-green-500">
+                    <label class="tech-label text-green-400">Raio (Mecanismo)</label>
+                    <select id="axisR" class="bg-black/30 text-white text-sm font-bold rounded-lg w-full p-2 outline-none border border-white/10 focus:border-green-500 transition-colors cursor-pointer" onchange="updateBubbleChart()">
+                        <option value="aia">Produção de Hormônios (AIA)</option>
+                        <option value="psol">Solubilização de Fósforo</option>
+                        <option value="nfix">Fixação de Nitrogênio</option>
+                        <option value="biocontrol">Biocontrole (Patógenos)</option>
+                        <option value="acc">Modulação Etileno (ACC)</option>
+                        <option value="isr">Indução Resistência (ISR)</option>
+                    </select>
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border-l-4 border-red-500 bg-gradient-to-br from-red-900/10 to-transparent">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="tech-label text-red-400 mb-0">Stress Ambiental</label>
+                        <span id="stressValue" class="text-xs font-mono font-bold text-red-300 bg-red-500/20 px-2 rounded">0%</span>
+                    </div>
+                    <input type="range" id="stressSlider" min="0" max="100" value="0" class="w-full h-2 rounded-lg appearance-none cursor-pointer" oninput="updateBubbleChart()">
+                    <div class="flex justify-between text-[10px] text-gray-500 mt-2 uppercase tracking-wide font-bold">
+                        <span>Ideal</span>
+                        <span>Crítico (Seca)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-6 rounded-[2rem] relative shadow-2xl flex flex-col h-[65vh] min-h-[500px]">
+                <div id="dynamic-warning" class="absolute top-6 right-6 z-20 max-w-sm text-right pointer-events-none transition-opacity duration-500 opacity-0">
+                    <div class="inline-block bg-red-500/10 border border-red-500/30 backdrop-blur-md text-red-200 px-4 py-2 rounded-lg text-xs font-bold shadow-lg animate-pulse">
+                        <i class="fas fa-exclamation-triangle mr-2"></i> <span id="warning-text">Colapso osmótico iminente</span>
+                    </div>
+                </div>
+                
+                <div class="relative w-full flex-grow min-h-0">
+                    <canvas id="bubbleLab"></canvas>
+                </div>
+                
+                <div class="mt-4 p-4 bg-white/5 rounded-xl border-l-4 border-white/20 flex gap-4 items-start transition-colors duration-500 shrink-0" id="context-box">
+                    <div class="shrink-0 mt-1"><i class="fas fa-info-circle text-xl text-blue-400" id="context-icon"></i></div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white uppercase tracking-wide mb-1" id="context-title">Status Fisiológico</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed" id="context-desc">Ajuste os parâmetros acima para simular a resposta biológica.</p>
+                    </div>
+                </div>
+            </div>
+
+         </div>
+    </section>
+<script>
+        // --- Theme Toggle (CORRIGIDO) ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('light-mode');
+            
+            // Lógica padrão de troca de classes do Tailwind
+            if (html.classList.contains('light-mode')) {
+                html.classList.remove('dark');
+            } else {
+                html.classList.add('dark');
+            }
+
+            // Ícones do botão
+            const isLight = html.classList.contains('light-mode');
+            const lightIcon = document.querySelector('.light-icon');
+            const darkIcon = document.querySelector('.dark-icon');
+            if(lightIcon) lightIcon.style.display = isLight ? 'none' : 'inline-block';
+            if(darkIcon) darkIcon.style.display = isLight ? 'inline-block' : 'none';
+            
+            // Atualiza gráficos da página principal
+            const textColor = isLight ? '#000000' : '#cbd5e1';
+            const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+            
+            const updateChart = (chart) => {
+                if (!chart) return;
+                if (chart.options.scales.x) chart.options.scales.x.ticks.color = textColor;
+                if (chart.options.scales.y) chart.options.scales.y.ticks.color = textColor;
+                if (chart.options.scales.x) chart.options.scales.x.grid.color = gridColor;
+                if (chart.options.scales.y) chart.options.scales.y.grid.color = gridColor;
+                if (chart.options.plugins.legend) {
+                    chart.options.plugins.legend.labels.color = textColor;
+                }
+                chart.update();
+            };
+
+            // Atualiza os gráficos existentes se eles já foram criados
+            if(window.bubbleChartLab) updateChart(window.bubbleChartLab);
+            if(window.currentWikiChart) updateChart(window.currentWikiChart);
+            if(window.currentCaseStudyChart) updateChart(window.currentCaseStudyChart);
+
+            // --- COMUNICAÇÃO COM IFRAMES ---
+            // Envia mensagem para TODOS os iframes carregados (Simulador e Analytics)
+            const frames = document.querySelectorAll('iframe');
+            frames.forEach(frame => {
+                // Garante que o contentWindow existe antes de enviar
+                if(frame.contentWindow) {
+                    frame.contentWindow.postMessage('toggle-theme', '*');
+                }
+            });
+        }
+
+        // --- Navigation ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => { el.classList.remove('active-view'); el.style.display = 'none'; });
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            
+            const target = document.getElementById(`view-${viewId}`);
+            if (target) { target.style.display = 'block'; setTimeout(() => target.classList.add('active-view'), 10); }
+            const navBtn = document.getElementById(`nav-${viewId}`);
+            if(navBtn) navBtn.classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // --- Lightbox Logic ---
+        function openLightbox(src, caption) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            const cap = document.getElementById('lightbox-caption');
+            
+            img.src = src;
+            cap.textContent = caption;
+            lightbox.classList.add('active');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+ 
+        }
+
+ // ==================================================================
+    // 1. DIAGRAMA INTERATIVO (FUNDAMENTOS)
+    // ==================================================================
+    function createBacteria() {
+        const container = document.getElementById('bacteria-cloud');
+        if(!container) return;
+        const count = 60;
+        for (let i = 0; i < count; i++) {
+            const div = document.createElement('div');
+            div.classList.add('bacterium');
+            const left = 25 + Math.random() * 50; 
+            const top = 48 + Math.random() * 45; 
+            const animDuration = 2 + Math.random() * 4;
+            const animDelay = Math.random() * -5;
+            const animName = `move-${i % 5}`;
+            const rotation = Math.random() * 360;
+            div.style.left = `${left}%`;
+            div.style.top = `${top}%`;
+            div.style.animationName = animName;
+            div.style.animationDuration = `${animDuration}s`;
+            div.style.animationDelay = `${animDelay}s`;
+            div.style.transform = `rotate(${rotation}deg)`;
+            container.appendChild(div);
+        }
+    }
+
+   const pgprMechanisms = [
+        { 
+            id: 'roots', 
+            title: 'Desenvolvimento Radicular', 
+            type: 'Direto - Bioestimulação', 
+            desc: 'Fitohormônios produzidos por PGPB (como AIA, citocininas e giberelinas) remodelam a arquitetura das raízes, aumentando drasticamente o número de raízes finas e pelos radiculares. Isso amplia o volume de solo explorado e a capacidade de ancoragem.', 
+            impact: 'Aumento da zona de absorção de água e tolerância inicial à seca.',
+            icon: 'sprout', top: '75%', left: '50%', color: 'text-bio-soil', border: 'border-bio-soil', shadow: 'shadow-orange-500/50', bg: 'bg-bio-soil/10', borderCol: 'border-bio-soil'
+        },
+        { 
+            id: 'nitrogen', 
+            title: 'Fixação Biológica de N (FBN)', 
+            type: 'Direto - Biofertilização', 
+            desc: 'Bactérias diazotróficas (Rhizobium, Azospirillum) convertem o N₂ inerte da atmosfera em amônia (NH₄⁺) assimilável pelas plantas. Em leguminosas, ocorre via simbiose nodular; em gramíneas, via associação na rizosfera.', 
+            impact: 'Substituição parcial ou total da adubação nitrogenada mineral (Ureia).',
+            icon: 'activity', top: '65%', left: '30%', color: 'text-bio-purple', border: 'border-bio-purple', shadow: 'shadow-purple-500/50', bg: 'bg-bio-purple/10', borderCol: 'border-bio-purple'
+        },
+        { 
+            id: 'nutrients', 
+            title: 'Solubilização de Nutrientes', 
+            type: 'Direto - Nutrição', 
+            desc: 'Microrganismos secretam ácidos orgânicos e fosfatases que solubilizam Fósforo (P) e Potássio (K) retidos no solo. Além disso, produzem sideróforos que quelam Ferro (Fe), tornando-o disponível para a planta e indisponível para patógenos.', 
+            impact: 'Maior eficiência da adubação fosfatada em solos tropicais.',
+            icon: 'droplet', top: '85%', left: '70%', color: 'text-bio-accent', border: 'border-bio-accent', shadow: 'shadow-sky-500/50', bg: 'bg-bio-accent/10', borderCol: 'border-bio-accent'
+        },
+        { 
+            id: 'auxin', 
+            title: 'Fitohormônios (Auxina)', 
+            type: 'Bioestimulação', 
+            desc: 'Produção de ácido indol-3-acético (AIA) a partir do L-triptofano exsudado pela planta. O AIA estimula a divisão celular intensa, o alongamento do caule e a formação de raízes adventícias.', 
+            impact: 'Vigor inicial acelerado e maior uniformidade no estande de plantas.',
+            icon: 'scan', top: '55%', left: '65%', color: 'text-bio-pink', border: 'border-bio-pink', shadow: 'shadow-pink-500/50', bg: 'bg-bio-pink/10', borderCol: 'border-bio-pink'
+        },
+        { 
+            id: 'leaves', 
+            title: 'Expansão Foliar', 
+            type: 'Efeito Indireto', 
+            desc: 'Um sistema radicular robusto e bem nutrido sustenta uma maior parte aérea. A planta mantém turgidez e estômatos abertos por mais tempo, permitindo maior captura de CO₂.', 
+            impact: 'Folhas mais verdes (Clorofila) e maior área para fotossíntese.',
+            icon: 'wind', top: '30%', left: '50%', color: 'text-bio-leaf', border: 'border-bio-leaf', shadow: 'shadow-green-500/50', bg: 'bg-bio-leaf/10', borderCol: 'border-bio-leaf'
+        },
+        { 
+            id: 'photosynthesis', 
+            title: 'Fotossíntese e Biomassa', 
+            type: 'Resultado Integrado', 
+            desc: 'A soma de melhor nutrição (N, P, K), hormônios e sanidade resulta em alta taxa fotossintética líquida. O carbono fixado é convertido em biomassa (grãos, frutos e fibras).', 
+            impact: 'Aumento direto na produtividade (kg/ha) e qualidade da colheita.',
+            icon: 'sun', top: '10%', left: '20%', color: 'text-bio-gold', border: 'border-bio-gold', shadow: 'shadow-yellow-500/50', bg: 'bg-bio-gold/10', borderCol: 'border-bio-gold'
+        }
+    ];
+
+  const fundamentosMap = {
+        roots: {
+            ambTitle: 'Ambiente – Solo explorável',
+            ambText: 'Textura média, boa estrutura e solo úmido permitem que as raízes estimuladas pelas PGPB ocupem maior volume de solo.',
+            manTitle: 'Manejo – Semeadura & irrigação',
+            manText: 'Evitar compactação, garantir umidade após a aplicação do inoculante e posicionar o produto na linha ou próximo à semente.',
+            mecTitle: 'Mecanismos – Raiz em expansão',
+            mecText: 'Fitohormônios (AIA, giberelinas e citocininas) remodelam o sistema radicular, aumentando raízes finas e pelos absorventes.'
+        },
+        nitrogen: {
+            ambTitle: 'Ambiente – Nitrogênio & pH',
+            ambText: 'Solos bem aerados, com pH próximo da neutralidade e teor adequado de matéria orgânica favorecem a fixação biológica de N.',
+            manTitle: 'Manejo – Inoculação correta',
+            manText: 'Usar estirpes recomendadas, respeitar dose mínima e evitar mistura direta com fertilizantes nitrogenados ou fungicidas agressivos.',
+            mecTitle: 'Mecanismos – Fixação biológica',
+            mecText: 'Bactérias diazotróficas convertem N₂ em amônia dentro dos nódulos ou na rizosfera, substituindo parte da adubação nitrogenada mineral.'
+        },
+        nutrients: {
+            ambTitle: 'Ambiente – Fósforo fixado',
+            ambText: 'Latossolos ácidos e ricos em óxidos de Fe e Al apresentam grande fração de P indisponível, alvo direto dos solubilizadores.',
+            manTitle: 'Manejo – Fertilidade integrada',
+            manText: 'Ajustar calagem e adubação fosfatada, associando inoculantes solubilizadores às fontes de P para aumentar a eficiência do fertilizante.',
+            mecTitle: 'Mecanismos – Solubilização & sideróforos',
+            mecText: 'Ácidos orgânicos, fosfatases e sideróforos liberam P e Fe adsorvidos na matriz do solo, nutrindo a planta e restringindo patógenos.'
+        },
+        auxin: {
+            ambTitle: 'Ambiente – Exsudatos radiculares',
+            ambText: 'Disponibilidade de carbono na rizosfera (exsudatos com triptofano) alimenta as bactérias produtoras de auxinas.',
+            manTitle: 'Manejo – Compatibilidade de insumos',
+            manText: 'Evitar agroquímicos que reduzam a população de PGPB logo após a inoculação e priorizar janelas de aplicação em ambiente úmido.',
+            mecTitle: 'Mecanismos – AIA & arquitetura',
+            mecText: 'A síntese de AIA microbiano a partir de L-triptofano modula divisão e alongamento celular, gerando raízes e brotações mais vigorosas.'
+        },
+        leaves: {
+            ambTitle: 'Ambiente – Luz, água e nutrientes',
+            ambText: 'Disposição de água no solo e disponibilidade de N e micronutrientes sustentam a manutenção de folhas ativas por mais tempo.',
+            manTitle: 'Manejo – Sanidade foliar',
+            manText: 'Programas integrados de controle de pragas e doenças preservam área foliar e potencializam o ganho de biomassa promovido pelos inoculantes.',
+            mecTitle: 'Mecanismos – Área foliar & turgor',
+            mecText: 'Melhor nutrição e equilíbrio hormonal mantêm estômatos funcionais e folhas túrgidas, prolongando a fotossíntese ativa.'
+        },
+        photosynthesis: {
+            ambTitle: 'Ambiente – Sistema de produção',
+            ambText: 'Densidade de plantas, manejo de água e radiação disponível definem o teto produtivo que pode ser explorado com bioinsumos.',
+            manTitle: 'Manejo – Integração com adubação',
+            manText: 'Inoculantes potencializam, mas não substituem o manejo básico. Ajuste de calagem, adubação e rotação de culturas é essencial.',
+            mecTitle: 'Mecanismos – Conversão em biomassa',
+            mecText: 'A soma de FBN, solubilização de nutrientes, hormônios e biocontrole resulta em maior taxa fotossintética líquida e acúmulo de grãos, fibras ou frutos.'
+        }
+    };
+
+    let activeId = null;
+
+    function updateFundamentosCards(mechId) {
+        const cfg = fundamentosMap[mechId];
+        if (!cfg) return;
+        ['ambTitle', 'ambText', 'manTitle', 'manText', 'mecTitle', 'mecText'].forEach(k => {
+            const el = document.getElementById('fund-' + k.replace(/([A-Z])/g, '-$1').toLowerCase());
+            if (el) el.textContent = cfg[k];
+        });
+    }
+
+    function activatePanel(data, btnElement) {
+        const overlay = document.getElementById('spotlight-overlay'); 
+        const btnReset = document.getElementById('btn-reset-view');
+        const panelDefault = document.getElementById('panel-default');
+        const panelContent = document.getElementById('panel-content');
+        const title = document.getElementById('panel-title');
+        const tag = document.getElementById('panel-tag');
+        const desc = document.getElementById('panel-desc');
+        const impact = document.getElementById('panel-impact');
+        const panel = document.getElementById('details-panel');
+
+        if (activeId === data.id) { resetPanel(); return; }
+        activeId = data.id;
+        
+        title.innerHTML = data.title;
+        tag.innerHTML = data.type;
+        tag.className = `text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${data.color} ${data.bg} ${data.borderCol}`;
+        desc.innerHTML = data.desc;
+        impact.innerHTML = data.impact;
+        updateFundamentosCards(data.id);
+        if(panel) panel.style.borderColor = data.color.replace('text-', 'var(--') + ')'; 
+
+        const x = parseFloat(data.left); 
+        const y = parseFloat(data.top);
+        if(overlay) {
+            overlay.style.setProperty('--x', `${x}%`);
+            overlay.style.setProperty('--y', `${y}%`);
+            overlay.classList.add('active');
+        }
+        if(btnReset) btnReset.classList.remove('opacity-0', 'pointer-events-none');
+        if(panelDefault) panelDefault.classList.add('hidden');
+        if(panelContent) panelContent.classList.remove('hidden', 'opacity-0', 'translate-y-4');
+        
+        document.querySelectorAll('.hotspot-btn .icon-circle').forEach(el => {
+            el.className = `icon-circle relative w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center transition-all duration-500 backdrop-blur-md bg-black/40 border-white/20 text-gray-400 shadow-none`;
+            el.style.transform = "scale(1)";
+            if(el.parentElement) el.parentElement.style.zIndex = "30"; 
+        });
+        document.querySelectorAll('.hotspot-btn .ping-ring').forEach(el => el.classList.remove('hidden'));
+        
+        if(btnElement) {
+            const activeCircle = btnElement.querySelector('.icon-circle');
+            const activePing = btnElement.querySelector('.ping-ring');
+            if(activePing) activePing.classList.add('hidden');
+            btnElement.style.zIndex = "50"; 
+            if(activeCircle) activeCircle.className = `icon-circle relative w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center transition-all duration-500 backdrop-blur-xl bg-white/10 ${data.border} ${data.color} shadow-[0_0_30px_currentColor] z-30 scale-125`;
+        }
+    }
+
+    function resetPanel() {
+        activeId = null;
+        const overlay = document.getElementById('spotlight-overlay');
+        const btnReset = document.getElementById('btn-reset-view');
+        const panelDefault = document.getElementById('panel-default');
+        const panelContent = document.getElementById('panel-content');
+        const panel = document.getElementById('details-panel');
+
+        if(overlay) overlay.classList.remove('active');
+        if(btnReset) btnReset.classList.add('opacity-0', 'pointer-events-none');
+        if(panel) panel.style.borderColor = 'var(--glass-border)';
+        if(panelContent) panelContent.classList.add('hidden', 'opacity-0', 'translate-y-4');
+        if(panelDefault) panelDefault.classList.remove('hidden');
+
+        document.querySelectorAll('.hotspot-btn').forEach(btn => {
+            btn.style.zIndex = "30"; 
+            const circle = btn.querySelector('.icon-circle');
+            const ping = btn.querySelector('.ping-ring');
+            const d = pgprMechanisms.find(m => m.id === btn.dataset.id);
+            if(circle && d) {
+                circle.className = `icon-circle relative w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center transition-all duration-500 backdrop-blur-md bg-black/40 ${d.border} ${d.color} ${d.shadow} shadow-lg`;
+                circle.style.transform = "scale(1)";
+            }
+            if(ping) ping.classList.remove('hidden');
+        });
+    }
+
+    function createHotspots() {
+        const container = document.getElementById('hotspots-layer');
+        if(!container) return;
+        container.innerHTML = '';
+        pgprMechanisms.forEach(mech => {
+            const btn = document.createElement('button');
+            btn.className = 'absolute transform -translate-x-1/2 -translate-y-1/2 focus:outline-none group/btn hotspot-btn cursor-pointer z-30';
+            btn.style.top = mech.top;
+            btn.style.left = mech.left;
+            btn.setAttribute('data-id', mech.id);
+            btn.innerHTML = `<span class="ping-ring absolute inset-0 inline-flex h-full w-full rounded-full opacity-30 animate-ping bg-white"></span><div class="icon-circle relative w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center transition-all duration-500 backdrop-blur-md bg-black/40 ${mech.border} ${mech.color} ${mech.shadow} shadow-lg group-hover/btn:scale-110 group-hover/btn:bg-black/60"><i data-lucide="${mech.icon}" class="w-5 h-5"></i></div>`;
+            btn.addEventListener('click', (e) => activatePanel(mech, btn));
+            container.appendChild(btn);
+        });
+    }
+
+    // ==================================================================
+    // 2. MAPA SOLVER (DADOS COMPLETOS)
+    // ==================================================================
+    // ==================================================================
+    // DADOS COMPLETOS DO MAPA (SOLVER) - RESTAURADOS
+    // ==================================================================
+    const solverData = [
+        {
+            id: "compactacao",
+            title: "Solo Compactado",
+            subtitle: "Estrutura Degradada",
+            icon: "fa-layer-group",
+            color: "amber",
+            gradient: "from-amber-600 to-orange-800",
+            mech: {
+                title: "Reestruturação Física & Bioquímica",
+                desc: "A compactação induz etileno de estresse na raiz. Bactérias com ACC Desaminase degradam esse etileno, permitindo o crescimento, enquanto Glomalina e EPS atuam como cimento biológico para agregar o solo.",
+                molecule: "ACC Desaminase / Glomalina",
+                action: "Agregação & Alívio de Estresse"
+            },
+            microbes: [
+                { name: "Priestia aryabhattai", strain: "Cepa UFV-10", specs: { temp: "25-35°C", ph: "5-9", type: "Bactéria" }, desc: "Reduz o etileno de estresse (ACC-D) permitindo que a raiz rompa camadas duras." },
+                { name: "Rhodopseudomonas", strain: "PNSB Palustris", specs: { temp: "28°C", ph: "Neutro", type: "Fotossintética" }, desc: "Produz biofilmes (EPS) que reestruturam microporos e aumentam a aeração." },
+                { name: "Glomus spp.", strain: "Micorriza", specs: { temp: "Variável", ph: "5.5-7.5", type: "Fungo" }, desc: "Hifas finas penetram microporos onde a raiz não entra, criando canais físicos." }
+            ],
+            recs: [
+                { type: "critical", title: "Carbono é Combustível", text: "PNSB e Micorrizas NÃO funcionam em solo nu. É obrigatório aplicar sobre palhada ou cultura de cobertura." },
+                { type: "dose", title: "Dosagem de Choque", text: "Em compactação severa, dobre a dose de Priestia (200mL/ha) para maximizar a enzima ACC-Desaminase." },
+                { type: "app", title: "Modo de Aplicação", text: "Preferencialmente Jato Dirigido no sulco de plantio para contato imediato com a raiz." },
+                { type: "compat", title: "Químicos Proibidos", text: "Evite fungicidas sistêmicos se usar Micorrizas, pois inibem a colonização." }
+            ]
+        },
+        {
+            id: "fosforo",
+            title: "Fósforo Fixado",
+            subtitle: "Deficiência Nutricional",
+            icon: "fa-lock",
+            color: "emerald",
+            gradient: "from-emerald-600 to-teal-800",
+            mech: {
+                title: "Solubilização Ácida & Enzimática",
+                desc: "Bactérias acidificam o microambiente (Ácido Glucônico) dissolvendo Ca-P e Fe-P, enquanto fosfatases quebram o P orgânico, tornando-o disponível para a planta.",
+                molecule: "Ácido Glucônico / Fitases",
+                action: "Dissolução Mineral"
+            },
+            microbes: [
+                { name: "Priestia megaterium", strain: "CNPMS B119", specs: { temp: "30°C", ph: "6.0-7.0", type: "Esporo" }, desc: "Campeã em produção de ácido glucônico via via metabólica PQQ-GDH." },
+                { name: "Pseudomonas fluorescens", strain: "Rizobactéria", specs: { temp: "25°C", ph: "6.5", type: "Vegetativa" }, desc: "Mineraliza fitatos orgânicos e quela Ferro, liberando P associado." },
+                { name: "Bacillus subtilis", strain: "CNPMS B2084", specs: { temp: "28-32°C", ph: "Variável", type: "Esporo" }, desc: "Sinergia: Biofilme amplia a área de contato raiz-solo para interceptação de P." }
+            ],
+            recs: [
+                { type: "critical", title: "Dependência de Água", text: "A difusão de ácidos orgânicos no solo exige umidade. Não aplicar em 'pó'." },
+                { type: "strategy", title: "Ativação de Adubo", text: "Misture o inoculante com fontes insolúveis (Fosfato de Rocha) para aumentar a eficiência." },
+                { type: "dose", title: "Concentração Mínima", text: "Garanta 10^9 UFC/mL no sulco. Populações baixas não alteram o pH da rizosfera." },
+                { type: "app", title: "Posicionamento", text: "O produto TEM que cair na semente ou no adubo. Aplicação a lanço é ineficiente." }
+            ]
+        },
+        {
+            id: "fungos",
+            title: "Doenças de Solo",
+            subtitle: "Fusarium / Rhizoctonia",
+            icon: "fa-skull",
+            color: "red",
+            gradient: "from-rose-600 to-red-900",
+            mech: {
+                title: "Barreira Biológica & Antibiose",
+                desc: "Ocupação preemptiva do nicho (biofilme), ataque direto às hifas (hiperparasitismo) e produção de antibióticos (iturinas/surfactinas).",
+                molecule: "Iturinas / Quitina / Sideróforos",
+                action: "Antibiose & Competição"
+            },
+            microbes: [
+                { name: "Trichoderma harzianum", strain: "CEPA T-22", specs: { temp: "25°C", ph: "5.0-6.5", type: "Fungo" }, desc: "Hiperparasitismo agressivo: enrola e digere as hifas do patógeno." },
+                { name: "Bacillus velezensis", strain: "GB03 / QST713", specs: { temp: "Variável", ph: "Neutro", type: "Bactéria" }, desc: "Produz antibióticos lipopeptídeos que blindam a raiz quimicamente." },
+                { name: "Pseudomonas putida", strain: "Sideróforo+", specs: { temp: "28°C", ph: "6.5-7.5", type: "Bactéria" }, desc: "Sequestra todo o ferro disponível, matando patógenos de fome (inanição)." }
+            ],
+            recs: [
+                { type: "critical", title: "Incompatibilidade", text: "NUNCA misture Trichoderma com fungicidas no tanque. Aplique em operações separadas." },
+                { type: "strategy", title: "Timing Perfeito", text: "O biológico precisa chegar PRIMEIRO. Trate a semente ou aplique no sulco." },
+                { type: "app", title: "Armazenamento", text: "Trichoderma é vivo e sensível. Morre se armazenado no calor (>35°C)." },
+                { type: "dose", title: "Pressão de Inóculo", text: "Em áreas com histórico de doença, aumente a dose recomendada em 50%." }
+            ]
+        },
+        {
+            id: "pragas",
+            title: "Pragas",
+            subtitle: "Lagartas / Percevejos",
+            icon: "fa-bug",
+            color: "purple",
+            gradient: "from-purple-600 to-indigo-900",
+            mech: {
+                title: "Bio-Inseticida Multimodal",
+                desc: "Controle via infecção fúngica (penetração cuticular), ingestão de cristais tóxicos ou neurotoxinas naturais.",
+                molecule: "Cristais Cry / Espinocinas",
+                action: "Morte por Contato/Ingestão"
+            },
+            microbes: [
+                { name: "Chromobacterium", strain: "subtsugae", specs: { temp: "20-30°C", ph: "6-8", type: "Metabólito" }, desc: "Causa rejeição alimentar e morte em percevejos e sugadores." },
+                { name: "Beauveria bassiana", strain: "IBCB 66", specs: { temp: "25°C", ph: "Neutro", type: "Fungo" }, desc: "O esporo germina na casca do inseto e coloniza o interior (mumificação)." },
+                { name: "Saccharopolyspora", strain: "spinosa", specs: { temp: "Variável", ph: "6-9", type: "Toxina" }, desc: "Neurotoxina de ação rápida para lagartas e trips." }
+            ],
+            recs: [
+                { type: "critical", title: "Umidade (Vital)", text: "BEAUVERIA EXIGE >70% UR para germinar. Aplique à noite ou em dias nublados." },
+                { type: "app", title: "Tecnologia de Aplicação", text: "Use bicos de cone vazio e alta pressão para garantir cobertura no alvo." },
+                { type: "compat", title: "pH da Calda", text: "Mantenha pH da calda entre 5.5 e 7.0 para não degradar as toxinas." },
+                { type: "strategy", title: "Alvo", text: "Chromobacterium funciona melhor em ninfas do que em adultos." }
+            ]
+        },
+        {
+            id: "plantulas",
+            title: "Vigor Inicial",
+            subtitle: "Enraizamento",
+            icon: "fa-seedling",
+            color: "green",
+            gradient: "from-green-600 to-emerald-800",
+            mech: {
+                title: "Fitostimulação Hormonal",
+                desc: "Conversão de Triptofano exsudado pela raiz em Auxinas (AIA), induzindo divisão celular intensa e raízes laterais.",
+                molecule: "AIA (Indol-Acético)",
+                action: "Divisão Celular & FBN"
+            },
+            microbes: [
+                { name: "Azospirillum brasilense", strain: "Ab-V5 / Ab-V6", specs: { temp: "25-30°C", ph: "6.0-7.0", type: "Bactéria" }, desc: "O motor de arranque. Aumenta volume de raiz e pelos absorventes." },
+                { name: "Bradyrhizobium", strain: "SEMIA 5079", specs: { temp: "28°C", ph: "6.5", type: "Bactéria" }, desc: "Obrigatório para suprimento de N em soja via simbiose." },
+                { name: "Methylobacterium", strain: "symbioticum", specs: { temp: "Variável", ph: "7.0", type: "Bactéria" }, desc: "Aplicação foliar. Acelera metabolismo de carbono e nitrogênio." }
+            ],
+            recs: [
+                { type: "critical", title: "Fotossensibilidade", text: "Azospirillum morre com luz UV direta em 20 min. Cubra a semente rapidamente." },
+                { type: "dose", title: "População Mínima", text: "Soja exige 1.2 milhões de células por semente para nodulação perfeita." },
+                { type: "strategy", title: "Co-Inoculação", text: "Padrão Ouro: Brady na Semente + Azospirillum no Sulco." },
+                { type: "app", title: "Foliar", text: "Methylobacterium deve ser aplicado de manhã cedo (estômatos abertos)." }
+            ]
+        },
+        {
+            id: "seca",
+            title: "Estresse Hídrico",
+            subtitle: "Seca & Calor",
+            icon: "fa-sun",
+            color: "orange",
+            gradient: "from-orange-500 to-red-700",
+            mech: {
+                title: "Osmoproteção Celular",
+                desc: "Acúmulo de solutos compatíveis (Trehalose/Prolina) que seguram água dentro da célula vegetal, evitando colapso.",
+                molecule: "Trehalose / Prolina",
+                action: "Osmorregulação"
+            },
+            microbes: [
+                { name: "Priestia aryabhattai", strain: "Sideral", specs: { temp: "20-40°C", ph: "5-9", type: "Esporo" }, desc: "Protege membranas celulares contra desidratação severa." },
+                { name: "Rhodopseudomonas", strain: "palustris", specs: { temp: "30°C", ph: "Neutro", type: "Fotossintética" }, desc: "Produz 5-ALA, um potente antioxidante que reduz danos por radicais livres." },
+                { name: "Bacillus licheniformis", strain: "Biofilme+", specs: { temp: "35°C", ph: "Variável", type: "Esporo" }, desc: "Cria uma 'gelatina' (EPS) higroscópica ao redor da raiz que retém umidade." }
+            ],
+            recs: [
+                { type: "strategy", title: "Antecipação", text: "Não adianta aplicar na seca. Aplique ANTES do veranico (3-5 dias) para ativar." },
+                { type: "critical", title: "Planta Viva", text: "O produto mitiga estresse, não ressuscita lavoura morta." },
+                { type: "app", title: "Resgate", text: "Se a seca já instalou, priorize metabólitos via foliar para efeito rápido." },
+                { type: "dose", title: "Recuperação", text: "Plantas inoculadas retomam crescimento 2x mais rápido após a chuva." }
+            ]
+        }
+    ];
+
+    const solverGrid = document.getElementById('solver-grid');
+    const solutionLayer = document.getElementById('solution-layer');
+
+    function renderSolverGrid() {
+        if(!solverGrid) return;
+        solverGrid.innerHTML = solverData.map(item => `
+            <div onclick="startDiagnostic('${item.id}')" class="glass-card-map rounded-2xl p-6 cursor-pointer group relative overflow-hidden h-48 flex flex-col justify-between border-l-4 border-${item.color}-500">
+                <div class="absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
+                <div class="flex justify-between items-start">
+                    <div class="p-3 rounded-xl bg-white/5 text-${item.color}-400 group-hover:scale-110 transition-transform shadow-lg">
+                        <i class="fas ${item.icon} text-2xl"></i>
+                    </div>
+                    <i class="fas fa-arrow-right text-slate-600 group-hover:text-white transition-colors"></i>
+                </div>
+                <div>
+                    <h3 class="font-display text-xl font-bold text-white mb-1 group-hover:translate-x-1 transition-transform">${item.title}</h3>
+                    <p class="text-slate-400 text-xs uppercase tracking-wide font-medium">${item.subtitle}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function startDiagnostic(id) {
+        const d = solverData.find(i => i.id === id);
+        if(solverGrid) solverGrid.classList.add('hidden');
+        if(solutionLayer) solutionLayer.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Reset animações
+        document.querySelectorAll('.phase').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.connector-line').forEach(el => el.classList.remove('grow'));
+
+        // FASE 1: DIAGNÓSTICO
+        document.getElementById('p1-header').innerHTML = `
+            <div class="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-${d.color}-500/30 bg-${d.color}-500/10 text-${d.color}-400 text-xs font-bold uppercase tracking-widest">
+                <i class="fas fa-bolt"></i> Diagnóstico
+            </div>
+            <h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-2">${d.mech.title}</h2>
+        `;
+        document.getElementById('p1-text').innerText = d.mech.desc;
+        document.getElementById('p1-mol').innerText = d.mech.molecule;
+        document.getElementById('p1-action').innerText = d.mech.action;
+
+        // FASE 2: AGENTES (MICROBES)
+        document.getElementById('p2-grid').innerHTML = d.microbes.map(m => `
+            <div class="glass-card-map rounded-xl p-5 border-t-2 border-${d.color}-500 hover:bg-white/5 transition-colors group">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-[10px] font-bold uppercase text-slate-500 tracking-wider">${m.strain}</span>
+                    <div class="flex gap-1">
+                        <span class="tech-badge">${m.specs.type}</span>
+                        <span class="tech-badge text-emerald-400">${m.specs.temp}</span>
+                    </div>
+                </div>
+                <h4 class="font-display text-lg font-bold text-white mb-1 group-hover:text-${d.color}-400 transition-colors">${m.name}</h4>
+                <p class="text-sm text-slate-400 leading-snug border-t border-white/5 pt-3 mt-2">${m.desc}</p>
+            </div>
+        `).join('');
+
+        // FASE 3: PROTOCOLO (RECS)
+        document.getElementById('p3-list').innerHTML = d.recs.map(rec => {
+            let colorClass = "blue";
+            let icon = "fa-info-circle";
+            
+            // Lógica de cores para os cards de recomendação
+            if(rec.type === 'critical') { colorClass = "red"; icon = "fa-radiation"; }
+            else if(rec.type === 'dose') { colorClass = "purple"; icon = "fa-flask"; }
+            else if(rec.type === 'strategy') { colorClass = "emerald"; icon = "fa-chess"; }
+            else if(rec.type === 'app') { colorClass = "orange"; icon = "fa-cogs"; }
+            else if(rec.type === 'compat') { colorClass = "yellow"; icon = "fa-exclamation-triangle"; }
+
+            // Classes Tailwind montadas dinamicamente
+            const themeClass = `border-${colorClass}-500/30 bg-${colorClass}-500/5 text-${colorClass}-400`;
+            
+            return `
+            <div class="rounded-xl p-5 border flex gap-4 transition-colors relative overflow-hidden ${themeClass}">
+                <div class="shrink-0 relative z-10 mt-1">
+                    <i class="fas ${icon} text-xl"></i>
+                </div>
+                <div class="relative z-10 w-full">
+                    <h5 class="text-sm font-bold mb-1 flex items-center gap-2 uppercase tracking-wide">
+                        ${rec.title}
+                    </h5>
+                    <p class="text-sm opacity-90 leading-relaxed font-light text-slate-200">${rec.text}</p>
+                </div>
+            </div>
+        `}).join('');
+
+        // Ativa a animação da primeira fase
+        setTimeout(() => { document.getElementById('phase-1').classList.add('active'); }, 100);
+    }
+
+    function nextPhase(phaseNum) {
+        const conn = document.getElementById(`conn-${phaseNum - 1}`);
+        if(conn) { conn.classList.add('grow'); conn.style.height = '80px'; conn.style.opacity = '1'; }
+        setTimeout(() => {
+            const phase = document.getElementById(`phase-${phaseNum}`);
+            if(phase) { phase.classList.add('active'); phase.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        }, 600);
+    }
+
+    function resetSolverGrid() {
+        if(solutionLayer) solutionLayer.classList.add('hidden');
+        if(solverGrid) solverGrid.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ==================================================================
+    // 3. DADOS WIKI COMPLETOS
+    // ==================================================================
+    // ==================================================================
+    // 3. DADOS WIKI (COMPLETOS E VERIFICADOS)
+    // ==================================================================
+// ==================================================================
+    // DADOS WIKI COMPLETOS (COM LEGENDAS RESTAURADAS)
+    // ==================================================================
+    const bioData = {
+        bacillus: {
+            name: 'Bacillus (Priestia)', 
+            sub: 'Solubilização de Fósforo e Biocontrole', 
+            descShort: 'Bactérias Gram-positivas de robustez extrema. Reclassificações recentes incluem o gênero Priestia (ex-Bacillus megaterium/aryabhattai).',
+            descLong: 'O gênero <strong>Bacillus</strong> (e <strong>Priestia</strong>) é a base dos inoculantes resistentes. A estirpe <em>Priestia aryabhattai</em> destaca-se pela resistência à seca e salinidade, enquanto <em>Priestia megaterium</em> mantém o protagonismo na solubilização de fosfato.',
+            image: 'assets/colonia bacillus.png', 
+            effectImages: [
+                {url: 'assets/efeito bacillus.png', cap: 'Comparativo Visual: Raízes mais profundas e volumosas em plantas tratadas.'},
+                {url: 'assets/efeito bacillus2.png', cap: 'Detalhe microscópico: Biofilme bacteriano colonizando a superfície radicular.'}
+            ],
+            strains: ['B. subtilis (CNPMS B2084)', 'Priestia megaterium (CNPMS B119)', 'Priestia aryabhattai', 'B. velezensis SAC36'],
+            colors: { main: '#38bdf8', hex: '#38bdf8' }, 
+            lab: { temp: 30, ph: 7.5, conc: 9, aia: 40, psol: 85, nfix: 20, biocontrol: 95, label: "Estável" },
+            tech: { temp: '25-35°C', media: 'TSB / Agar Nutriente', ph: '6.0-8.0', conc: '10⁹ esporos/mL' },
+            app: { crops: 'Milho, Soja, Hortaliças', soil: 'Latossolos e Solos Salinos', env: 'Tolerante a Seca/Calor', method: 'Tratamento Semente ou Sulco' },
+            field: 'Priestia aryabhattai promoveu crescimento radicular em condições de estresse hídrico severo.',
+            doseInfo: {
+                range: "10⁹ Esporos/mL",
+                justification: "Alta densidade celular para garantir germinação e competição com a microflora nativa.",
+                critical: "A forma esporulada garante estabilidade por 1-2 anos, mas requer ativação em solo úmido."
+            },
+            mechanisms: [
+                {t:'Solubilização de P', d:'Priestia megaterium solubiliza fosfatos complexos.'},
+                {t:'Resistência a Estresse', d:'Priestia aryabhattai confere tolerância à seca e salinidade.'},
+                {t:'Biocontrole', d:'Bacillus velezensis/subtilis formam barreira protetora contra fungos.'}
+            ],
+            chartData: { labels: ['AIA', 'Solubilização de P', 'Sideróforos', 'ACC desaminase', 'Biocontrole', 'GAs', 'Fixação de N', 'ISR'], data: [40, 85, 70, 75, 95, 60, 20, 80], label: "Perfil funcional PGPR" },
+            flow: [
+                {t:"Solo Seco/Salino", s:"Condição adversa."},
+                {t:"Priestia spp.", s:"Ativação e proteção."},
+                {t:"Mecanismo", s:"Osmorregulação e Solub. P."},
+                {t:"Efeito", s:"Sobrevivência e Vigor."}
+            ],
+            table: [
+                {c1: "Priestia megaterium", c2: "Milho", c3: "Solubilização de P", c4: "Aumento de eficiência de fertilizantes fosfatados."},
+                {c1: "Priestia aryabhattai", c2: "Culturas Gerais", c3: "Tolerância Hídrica", c4: "Resiliência em regiões de seca."}
+            ],
+            caseStudy: {
+                title: "Eficiência em Solos com P Fixado",
+                desc: "A co-inoculação de B. megaterium CNPMS B119 e B. subtilis CNPMS B2084 em milho demonstrou um aumento significativo de produtividade em solos tropicais com alta fixação de fósforo.",
+                ref: "Oliveira-Paiva et al., 2024. Frontiers in Microbiology.",
+                chartData: { labels: ["Controle", "B. megaterium", "B. subtilis", "Co-Inoculação"], data: [100, 115, 112, 124] }
+            }
+        },
+        methylobacterium: {
+            name: 'Methylobacterium', 
+            sub: 'Bactérias Rosa (Folha e Raiz)', 
+            descShort: 'Bactérias pigmentadas de rosa que colonizam a superfície foliar (filosfera) e raízes, fixando nitrogênio e produzindo citocininas.',
+            descLong: '<em>Methylobacterium symbioticum</em> representa uma nova fronteira: a inoculação foliar. Estas bactérias utilizam metanol (subproduto do crescimento vegetal) como fonte de carbono, fixam nitrogênio atmosférico e produzem fitohormônios que aumentam a eficiência fotossintética.',
+            image: 'assets/colonia Methylobacterium.jpeg', 
+            effectImages: [
+                {url: 'assets/efeito Methylobacterium.jpeg', cap: 'Efeito "Stay-green": Retenção de clorofila em folhas sob estresse.'},
+                {url: 'assets/efeito Methylobacterium2.jpeg', cap: 'Vigor Foliar: Planta tratada apresenta maior área foliar e sanidade.'}
+            ],
+            strains: ['Methylobacterium symbioticum'],
+            colors: { main: '#ec4899', hex: '#ec4899' }, 
+            lab: { temp: 28, ph: 7.0, conc: 8, aia: 60, psol: 30, nfix: 80, biocontrol: 20, label: "Filosfera" },
+            tech: { temp: '25-37°C', media: 'Meio com Metanol', ph: '6.0-8.0', conc: '10⁸ UFC/mL' },
+            app: { crops: 'Soja, Milho, Café, Hortifruti', soil: 'Aplicação Foliar (Independente do solo)', env: 'Pleno Sol (Pigmento protege UV)', method: 'Pulverização Foliar' },
+            field: 'Aumento da eficiência fotossintética e retenção de clorofila (Stay-green).',
+            doseInfo: {
+                range: "10⁸ UFC/mL",
+                justification: "Dose ajustada para colonização rápida dos estômatos e superfície foliar.",
+                critical: "A aplicação deve garantir cobertura foliar. Pigmentos rosas conferem proteção natural contra radiação UV."
+            },
+            mechanisms: [
+                {t:'Fixação de N Foliar', d:'Fornecimento direto de nitrogênio à folha.'},
+                {t:'Consumo de Metanol', d:'Metanol é tóxico para a planta; sua remoção aumenta o vigor.'},
+                {t:'Citocininas', d:'Retarda a senescência foliar (efeito Stay-green).'}
+            ],
+            chartData: { labels: ['AIA', 'Solubilização de P', 'Sideróforos', 'ACC desaminase', 'Biocontrole', 'GAs', 'Fixação de N', 'ISR'], data: [60, 30, 20, 40, 20, 80, 80, 50], label: "Perfil funcional PGPR" },
+            flow: [
+                {t:"Folha", s:"Exsudação de Metanol."},
+                {t:"Methylobacterium", s:"Consumo de Metanol + FBN."},
+                {t:"Efeito", s:"Mais Fotossíntese e N."}
+            ],
+            table: [
+                {c1: "M. symbioticum", c2: "Soja/Milho", c3: "FBN Foliar + Citocininas", c4: "Maior enchimento de grãos e sanidade foliar."}
+            ],
+            caseStudy: {
+                title: "Bioestimulação Foliar em Soja",
+                desc: "A aplicação foliar de M. symbioticum aumentou a retenção de clorofila e o peso de grãos em condições de estresse térmico.",
+                ref: "Y. Mecellani et al., 2023. Agronomy Journal.",
+                chartData: { labels: ["Controle", "Methylo T1", "Methylo T2"], data: [3200, 3450, 3580] }
+            }
+        },
+        bioinseticidas: {
+            name: 'Bioinseticidas', 
+            sub: 'Controle Biológico Avançado', 
+            descShort: 'Bactérias e fungos entomopatogênicos para controle de pragas difíceis como lagartas, trips e percevejos.',
+            descLong: 'A nova geração de bioinseticidas inclui bactérias como <em>Chromobacterium subtsugae</em> e <em>Saccharopolyspora spinosa</em>, além dos fungos clássicos. Oferecem controle específico sem resíduos químicos, atuando por ingestão ou contato.',
+            image: 'assets/colonia Beauveria.jpeg', 
+            effectImages: [
+                {url: 'assets/efeito Bauveria.jpeg', cap: 'Esporulação fúngica sobre o exoesqueleto da lagarta (mumificação).'},
+                {url: 'assets/efeito Bauveria2.jpeg', cap: 'Controle Populacional: Colônia de fungos eliminando praga alvo.'}
+            ],
+            strains: ['Chromobacterium subtsugae', 'Saccharopolyspora spinosa', 'Beauveria bassiana', 'Metarhizium anisopliae'],
+            colors: { main: '#6366f1', hex: '#6366f1' }, 
+            lab: { temp: 25, ph: 6.5, conc: 8, aia: 0, psol: 0, nfix: 0, biocontrol: 100, label: "Inseticida" },
+            tech: { temp: '20-30°C (Fungos exigem umidade)', media: 'Meios específicos', ph: '5.0-9.0 (Bactérias)', conc: 'Variável' },
+            app: { crops: 'Todas as culturas', soil: 'Aplicação Foliar', env: 'Alta umidade (Fungos) / Variável (Bactérias)', method: 'Pulverização dirigida' },
+            field: 'Controle efetivo de Spodoptera e percevejos resistentes a químicos.',
+            doseInfo: {
+                range: "Variável (Esporos/mL ou Metabólitos)",
+                justification: "Dose letal depende do estágio da praga (lagartas jovens são mais suscetíveis).",
+                critical: "Para fungos (Beauveria), umidade alta (>70%) é vital. Para bactérias, o pH da calda é crítico."
+            },
+            mechanisms: [
+                {t:'Infecção Cuticular', d:'Fungos penetram o exoesqueleto do inseto.'},
+                {t:'Toxinas Orais', d:'Bactérias produzem proteínas tóxicas após ingestão.'},
+                {t:'Ação Neural', d:'Espinocinas (Saccharopolyspora) afetam sistema nervoso.'}
+            ],
+            chartData: { labels: ['AIA', 'Solubilização de P', 'Sideróforos', 'ACC desaminase', 'Biocontrole', 'GAs', 'Fixação de N', 'ISR'], data: [0, 0, 0, 0, 100, 0, 0, 85], label: "Perfil funcional PGPR" },
+            flow: [
+                {t:"Praga Alvo", s:"Lagarta/Percevejo."},
+                {t:"Aplicação", s:"Contato ou Ingestão."},
+                {t:"Ação", s:"Paralisia ou Infecção."},
+                {t:"Resultado", s:"Morte da praga."}
+            ],
+            table: [
+                {c1: "Chromobacterium subtsugae", c2: "Milho/Soja", c3: "Múltipla ação (Repelência/Toxicidade)", c4: "Controle de lagartas e percevejos."},
+                {c1: "Saccharopolyspora spinosa", c2: "Hortifruti", c3: "Neurotoxina natural", c4: "Controle de trips e minadores."},
+                {c1: "Beauveria/Metarhizium", c2: "Geral", c3: "Colonização fúngica", c4: "Controle de cigarrinhas e mosca-branca."}
+            ],
+            caseStudy: {
+                title: "Controle de Spodoptera frugiperda",
+                desc: "Redução de 85% na população de lagartas em milho safrinha comparado ao controle, com menor impacto sobre inimigos naturais.",
+                ref: "Embrapa Milho e Sorgo, Circ. Téc. 2022.",
+                chartData: { labels: ["Testemunha", "Químico", "Bioinseticida"], data: [100, 25, 15] }
+            }
+        },
+        pseudomonas: {
+            name: 'Pseudomonas spp.', 
+            sub: 'Rizobactérias fluorescentes e sideróforos', 
+            descShort: 'Gram-negativas de crescimento explosivo. Dominam a rizosfera inicial e sequestram ferro via sideróforos.',
+            descLong: 'Estirpes de <strong>Pseudomonas fluorescens</strong> possuem extraordinária capacidade de colonização do rizoplano. A produção de sideróforos (quelantes de ferro) priva patógenos de nutrientes, enquanto a solubilização de fósforo nutre a planta.',
+            image: 'assets/colonia pseudomonas.jpeg', 
+            effectImages: [
+                {url: 'assets/efeito Pseudomonas.jpeg', cap: 'Colonização concêntrica: Raiz em corte transversal com Pseudomonas na superfície radicular.'},
+                {url: 'assets/efeito Pseudomonas2.jpeg', cap: 'Efeito Sideróforo: Planta tratada verde vs controle clorótico (falta de Fe).'}
+            ],
+            strains: ['P. fluorescens (VNMKV1)', 'P. putida'],
+            colors: { main: '#a855f7', hex: '#a855f7' }, 
+            lab: { temp: 28, ph: 6.5, conc: 8.5, aia: 50, psol: 95, nfix: 10, biocontrol: 80, label: "Agressivo" },
+            tech: { temp: '20-30°C', media: "King's B", ph: '6.0-7.5', conc: '10⁸-10¹⁰ UFC/mL' },
+            app: { crops: 'Trigo, Leguminosas (Co-inoculação)', soil: 'Baixo Ferro', env: 'Umidade Constante', method: 'Líquido (Proteção Osmótica)' },
+            field: 'A co-inoculação aumentou a ocupação de nódulos em guandu de 50% para 85%.',
+            doseInfo: {
+                range: "10⁸ - 10¹⁰ UFC/mL",
+                justification: "Como estrategistas-r, exigem altas populações para colonização rápida.",
+                critical: "Bactérias não-esporulantes. Exige proteção osmótica na formulação."
+            },
+            mechanisms: [
+                {t:'Sideróforos', d:'Vantagem competitiva por Ferro.'},
+                {t:'Solubilização de P', d:'Liberação de fósforo fixado.'},
+                {t:'Biofilmes', d:'Colonização agressiva da raiz.'}
+            ],
+            chartData: { labels: ['AIA', 'Solubilização de P', 'Sideróforos', 'ACC desaminase', 'Biocontrole', 'GAs', 'Fixação de N', 'ISR'], data: [50, 95, 95, 80, 80, 40, 10, 90], label: "Perfil funcional PGPR" },
+            flow: [
+                {t:"Rizoplano", s:"Exsudatos."},
+                {t:"Pseudomonas", s:"Colonização Rápida."},
+                {t:"Mecanismo", s:"Sideróforos (Fe)."},
+                {t:"Efeito", s:"Sanidade e P."}
+            ],
+            table: [
+                {c1: "P. fluorescens", c2: "Trigo/Soja", c3: "Sideróforos + Solub. P", c4: "Promoção de saúde e vigor."},
+                {c1: "P. putida", c2: "Leguminosas", c3: "Helper de Nodulação", c4: "Aumenta eficiência de rizóbios."}
+            ],
+            caseStudy: {
+                title: "Supressão de Fusarium em Trigo",
+                desc: "O tratamento de sementes com Pseudomonas fluorescens reduziu a incidência de podridão radicular em 48% em solos infestados.",
+                ref: "R. Mendes et al., 2013. Science (Adaptado).",
+                chartData: { labels: ["Controle (Doença)", "Tratado (Doença)"], data: [80, 41] }
+            }
+        },
+        fixadores: {
+            name: 'Azospirillum spp.', 
+            sub: 'Fixação biológica associativa', 
+            descShort: 'Associativos em gramíneas. Produção massiva de hormônios (AIA) e FBN livre.',
+            descLong: 'O <strong>Azospirillum brasilense</strong> (estirpes modernas Ab-V5 e Ab-V6) é o motor das gramíneas. Atua na produção de fitohormônios que expandem o sistema radicular, aumentando a absorção de água e nutrientes.',
+            image: 'assets/colonia Azospirillum.jpeg', 
+            effectImages: [
+                {url: 'assets/efeito Azospirillum.jpeg', cap: 'Explosão Radicular: Aumento massivo de raízes secundárias e pelos absorventes.'},
+                {url: 'assets/efeito Azospirillum2.jpeg', cap: 'Comparativo em Milho: Sistema radicular mais robusto e profundo à direita.'}
+            ],
+            strains: ['A. brasilense (Ab-V5, Ab-V6)', 'A. zeae'],
+            colors: { main: '#22c55e', hex: '#22c55e' }, 
+            lab: { temp: 29, ph: 6.5, conc: 7.5, aia: 85, psol: 50, nfix: 60, biocontrol: 30, label: "Enraizador" },
+            tech: { temp: '20-35°C', media: 'NFb', ph: '5.5-7.5', conc: '10⁸-10¹⁰ UFC/mL' },
+            app: { crops: 'Milho, Trigo, Pastagens', soil: 'Qualquer', env: 'Microaerófilo', method: 'Sulco ou Semente' },
+            field: 'Estimula crescimento radicular e complementa FBN em soja/milho.',
+            doseInfo: {
+                range: "10⁸ - 10¹⁰ UFC/mL",
+                justification: "Alta concentração garante colonização do córtex radicular.",
+                critical: "Sensível à dessecação. Evitar exposição solar direta na aplicação."
+            },
+            mechanisms: [
+                {t:'Fitohormônios', d:'Produção de AIA estimula raízes.'},
+                {t:'FBN Associativa', d:'Fixação de N em microaerofilia.'},
+                {t:'Resiliência', d:'Aumenta tolerância à seca.'}
+            ],
+            chartData: { labels: ['AIA', 'Solubilização de P', 'Sideróforos', 'ACC desaminase', 'Biocontrole', 'GAs', 'Fixação de N', 'ISR'], data: [85, 50, 30, 70, 30, 85, 60, 60], label: "Perfil funcional PGPR" },
+            flow: [
+                {t:"Raiz", s:"Exsudatos."},
+                {t:"Azospirillum", s:"Produção AIA."},
+                {t:"Efeito", s:"Mais Raízes = Mais Água."}
+            ],
+            table: [
+                {c1: "A. brasilense Ab-V5/V6", c2: "Milho/Trigo", c3: "Hormônios + FBN", c4: "Aumento de produtividade e raízes."}
+            ],
+            caseStudy: {
+                title: "Coinoculação em Milho",
+                desc: "A associação de Azospirillum com Bradyrhizobium incrementou a biomassa radicular em 30% e a absorção de nutrientes.",
+                ref: "Hungria et al., 2010. Biology and Fertility of Soils.",
+                chartData: { labels: ["Controle", "Azospirillum", "Coinoculação"], data: [100, 115, 130] }
+            }
+        },
+        rhizobium: {
+            name: 'Rhizobium/Brady', 
+            sub: 'Simbiose nodular em leguminosas', 
+            descShort: 'Especialistas em leguminosas. Fixação simbiótica de N de alta eficiência.',
+            descLong: '<strong>Bradyrhizobium</strong> (Soja) e <strong>Rhizobium</strong> (Feijão) são essenciais. As estirpes SEMIA 5079/5080 representam o padrão de eficiência para soja no Brasil.',
+            image: 'assets/colonia Bradyrhizobium.jpeg', 
+            effectImages: [
+                {url: 'assets/efeito Rhyzobium.jpg', cap: 'Nodulação de Elite: Nódulos abundantes na coroa da raiz principal.'},
+                {url: 'assets/efeito Rhyzobium2.jpg', cap: 'Viabilidade Interna: Nódulo cortado apresentando cor vermelha (Leghemoglobina ativa).'}
+            ],
+            strains: ['Bradyrhizobium (SEMIA 5079/5080)', 'Rhizobium leguminosarum'],
+            colors: { main: '#f97316', hex: '#f97316' }, 
+            lab: { temp: 30, ph: 6.8, conc: 9, aia: 30, psol: 20, nfix: 100, biocontrol: 40, label: "Específico" },
+            tech: { temp: '25-30°C', media: 'YEM', ph: '6.0-7.0', conc: '10⁹-10¹⁰ UFC/mL' },
+            app: { crops: 'Soja, Feijão, Ervilha', soil: 'Corrigido', env: 'pH Neutro', method: 'Inoculação Semente/Sulco' },
+            field: 'Suprimento total de N para a cultura da soja.',
+            doseInfo: {
+                range: "10⁹ - 10¹⁰ UFC/mL",
+                justification: "Dose massiva para garantir nodulação primária na raiz principal.",
+                critical: "Compatibilidade com químicos é crítica. Morrem rapidamente com fungicidas tóxicos."
+            },
+            mechanisms: [
+                {t:'Nodulação', d:'Formação de nódulos fixadores.'},
+                {t:'FBN Simbiótica', d:'Conversão de N2 em amônia.'}
+            ],
+            chartData: { labels: ['AIA', 'Solubilização de P', 'Sideróforos', 'ACC desaminase', 'Biocontrole', 'GAs', 'Fixação de N', 'ISR'], data: [30, 20, 20, 40, 40, 60, 100, 50], label: "Perfil funcional PGPR" },
+            flow: [
+                {t:"Semente", s:"Inoculação."},
+                {t:"Raiz", s:"Infecção/Nódulo."},
+                {t:"Planta", s:"FBN (Nitrogênio)."}
+            ],
+            table: [
+                {c1: "Bradyrhizobium SEMIA", c2: "Soja", c3: "FBN Simbiótica", c4: "Substituição total de N mineral."},
+                {c1: "R. leguminosarum", c2: "Feijão/Ervilha", c3: "FBN Específica", c4: "Aumento de produtividade."}
+            ],
+            caseStudy: {
+                title: "Fixação Biológica em Soja",
+                desc: "Substituição total de nitrogênio mineral com produtividades superiores a 4 ton/ha, economizando bilhões em fertilizantes.",
+                ref: "M. Hungria et al., 2013. Soil Biology.",
+                chartData: { labels: ["N Mineral", "Inoculante"], data: [3800, 3950] }
+            }
+        },
+        fungos: {
+            name: 'Fungos PGP', 
+            sub: 'Trichoderma e micorrizas', 
+            descShort: 'Fungos benéficos que ampliam a zona de absorção radicular e combatem patógenos de solo.',
+            descLong: '<strong>Trichoderma harzianum</strong> protege contra patógenos de solo (Pythium, Fusarium), enquanto micorrizas expandem a absorção. Exigem umidade para estabelecimento.',
+            image: 'assets/colonia trichoderma.jpeg', 
+            effectImages: [
+                {url: 'assets/efeito Trichoderma.jpeg', cap: 'Hiperparasitismo: Hifas de Trichoderma estrangulando fungo patogênico.'},
+                {url: 'assets/efeito Trichoderma2.png', cap: 'Promoção de Crescimento: Raízes protegidas e livres de necrose.'}
+            ],
+            strains: ['Trichoderma harzianum', 'Micorrizas Arbusculares'],
+            colors: { main: '#eab308', hex: '#eab308' }, 
+            lab: { temp: 25, ph: 6.0, conc: 6, aia: 20, psol: 60, nfix: 0, biocontrol: 90, label: "Fúngico" },
+            tech: { temp: '20-30°C', media: 'PDA', ph: '4.0-7.0', conc: 'Esporos/g' },
+            app: { crops: 'Hortaliças, Soja, Milho', soil: 'Úmido', env: 'Alta Umidade', method: 'Semente ou Drench' },
+            field: 'Solo sanitário e maior absorção de P.',
+            doseInfo: {
+                range: "10⁶ - 10⁸ Esporos/g",
+                justification: "Estabelecimento de micélio protetor.",
+                critical: "Umidade do solo é o fator limitante. Não aplicar em solo seco."
+            },
+            mechanisms: [
+                {t:'Micoparasitismo', d:'Trichoderma ataca fungos patogênicos.'},
+                {t:'Hifas', d:'Micorrizas buscam água e P longe da raiz.'}
+            ],
+            chartData: { labels: ['AIA', 'Solubilização de P', 'Sideróforos', 'ACC desaminase', 'Biocontrole', 'GAs', 'Fixação de N', 'ISR'], data: [20, 60, 10, 30, 90, 20, 0, 95], label: "Perfil funcional PGPR" },
+            flow: [
+                {t:"Solo", s:"Esporos."},
+                {t:"Raiz", s:"Colonização."},
+                {t:"Efeito", s:"Proteção e Nutrição."}
+            ],
+            table: [
+                {c1: "Trichoderma harzianum", c2: "Diversas", c3: "Biocontrole Solo", c4: "Controle de tombamento (Damping-off)."},
+                {c1: "Micorrizas", c2: "Milho/Trigo", c3: "Absorção P", c4: "Resistência à seca."}
+            ],
+            caseStudy: {
+                title: "Promoção de Crescimento em Hortaliças",
+                desc: "A inoculação com Trichoderma harzianum resultou em um aumento de 25% no peso fresco de alface em sistema hidropônico.",
+                ref: "G. Harman et al., 2004. Nature Reviews.",
+                chartData: { labels: ["Controle", "Trichoderma"], data: [100, 125] }
+            }
+        },
+        pnsb: {
+            name: 'PNSB', 
+            sub: 'Bactérias fotossintéticas', 
+            descShort: 'Bactérias que formam biofilmes, degradam matéria orgânica e reduzem nitratos.',
+            descLong: '<strong>Rhodopseudomonas palustris</strong> melhora a estrutura do solo, fixa nitrogênio e reduz teores tóxicos de nitrato em folhosas. Produz 5-ALA (antiestresse).',
+            image: 'assets/colonia Rhodopseudomonas.png', 
+            effectImages: [
+                {url: 'assets/efeito Rhodopseudomonas.jpeg', cap: 'Biofilme Bacteriano: Coloração avermelhada indicando estabelecimento no substrato.'},
+                {url: 'assets/efeito Rhodopseudomonas2.jpeg', cap: 'Recuperação de Solo: Estruturação de agregados e vida microbiana.'}
+            ],
+            strains: ['Rhodopseudomonas palustris'],
+            colors: { main: '#ef4444', hex: '#ef4444' }, 
+            lab: { temp: 28, ph: 7.0, conc: 6, aia: 100, psol: 10, nfix: 40, biocontrol: 70, label: "Biofilme" },
+            tech: { temp: 'Variável', media: 'Resíduos Orgânicos', ph: '7.0', conc: '10⁶ UFC/g' },
+            app: { crops: 'Hortaliças, Arroz', soil: 'Rico em M.O.', env: 'Luz/Umidade', method: 'Solo ou Foliar' },
+            field: 'Hortaliças mais vigorosas e com menos nitrato.',
+            doseInfo: {
+                range: "10⁶ UFC/g",
+                justification: "Formação de biofilmes persistentes.",
+                critical: "Sobrevivência depende de luz ou carbono orgânico."
+            },
+            mechanisms: [
+                {t:'5-ALA', d:'Resistência a frio/sal.'},
+                {t:'Degradação', d:'Reciclagem de matéria orgânica.'}
+            ],
+            chartData: { labels: ['AIA', 'Solubilização de P', 'Sideróforos', 'ACC desaminase', 'Biocontrole', 'GAs', 'Fixação de N', 'ISR'], data: [100, 10, 40, 50, 70, 70, 40, 65], label: "Perfil funcional PGPR" },
+            flow: [
+                {t:"Luz/Carbono", s:"Energia."},
+                {t:"PNSB", s:"Biofilme."},
+                {t:"Efeito", s:"Vida."}
+            ],
+            table: [
+                {c1: "R. palustris", c2: "Hortaliças", c3: "Redução Nitrato", c4: "Qualidade."}
+            ],
+            caseStudy: {
+                title: "Recuperação de Solos Salinos",
+                desc: "A aplicação de PNSB resultou na redução da condutividade elétrica e aumento significativo de matéria orgânica em solo degradado.",
+                ref: "K. Lee et al., 2021. Applied Soil Ecology.",
+                chartData: { labels: ["Salinidade Inicial", "Salinidade Final (PNSB)"], data: [8.5, 4.2] }
+            }
+        }
+    };
+
+    let currentWikiChart = null;
+    let currentCaseStudyChart = null;
+
+function renderWiki() {
+        const nav = document.getElementById('wiki-nav');
+        if(nav) nav.innerHTML = Object.keys(bioData).map(key => `
+            <button onclick="loadWiki('${key}')" class="neon-btn w-[65vw] lg:w-full flex-shrink-0 text-left p-6 mr-4 lg:mr-0 lg:mb-4 rounded-2xl flex items-center group">
+                <div class="neon-bar" style="--glow-color: ${bioData[key].colors.main}"></div>
+                <div class="pl-10">
+                    <div class="font-bold text-white text-xl tracking-tight">${bioData[key].name}</div>
+                </div>
+            </button>
+        `).join('');
+        loadWiki('bacillus');
+    }
+
+ function loadWiki(key) {
+        const d = bioData[key];
+        const content = document.getElementById('wiki-content');
+        if(!content) return;
+        
+        // Define a cor da borda superior dinamicamente
+        content.style.borderTopColor = d.colors.main;
+        
+        // --- 1. GERAÇÃO HTML DAS IMAGENS DE EFEITO (Layout Grid + Legendas) ---
+        let effectImagesHtml = '';
+        if (d.effectImages && d.effectImages.length > 0) {
+            effectImagesHtml = `
+            <div class="mt-12 pt-12 border-t border-white/10 animate-fade-in" style="animation-delay: 0.6s;">
+                <div class="text-center text-xs text-gray-500 uppercase tracking-widest mb-8"><i class="fas fa-eye mr-2"></i> Case Study Visual: Efeito Agronômico</div>
+                <div class="grid grid-cols-1 md:grid-cols-${d.effectImages.length > 1 ? '2' : '1'} gap-6">
+                    ${d.effectImages.map(item => `
+                        <div class="relative rounded-xl overflow-hidden group border border-white/10 shadow-2xl cursor-zoom-in bg-[#080c19]" 
+                                data-url="${item.url}" 
+                                data-cap="${item.cap.replace(/"/g, '&quot;')}"
+                                onclick="openLightbox(this.getAttribute('data-url'), this.getAttribute('data-cap'))">
+                            <img src="${item.url}" alt="Efeito Visual" class="w-full h-48 md:h-64 object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-end pb-6 px-4 text-center">
+                                <p class="text-white text-sm font-medium leading-snug transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300" style="color: #ffffff !important;">${item.cap}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        }
+
+        // --- 2. GERAÇÃO HTML DO CASE STUDY (Card Estilizado) ---
+        let caseStudyHtml = '';
+        if (d.caseStudy) {
+            caseStudyHtml = `
+            <div class="mt-12 animate-fade-in" style="animation-delay: 0.7s;">
+                <div class="relative p-8 rounded-3xl border-2 border-dashed border-white/10 bg-white/5 overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full pointer-events-none"></div>
+                    
+                    <h3 class="text-2xl font-display font-bold text-white mb-4 flex items-center gap-3">
+                        <i class="fas fa-flask" style="color:${d.colors.main}"></i> Case Study: Validação Científica
+                    </h3>
+                    
+                    <h4 class="text-xl font-bold text-white mb-3">${d.caseStudy.title}</h4>
+                    <p class="text-gray-300 text-base leading-relaxed mb-6 max-w-3xl">${d.caseStudy.desc}</p>
+                    
+                    <div class="text-xs text-gray-500 italic mb-8 border-l-2 border-white/10 pl-4">
+                        Ref: ${d.caseStudy.ref}
+                    </div>
+
+                    <div class="w-full h-[250px] relative">
+                        <canvas id="caseStudyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // --- 3. CONSTRUÇÃO DO HTML PRINCIPAL ---
+        let html = `
+            <div class="mb-10 animate-fade-in">
+                <div class="text-xs font-bold uppercase tracking-widest mb-2" style="color:${d.colors.main}">Grupo Microbiano</div>
+                <h2 class="wiki-title text-white font-bold mb-4">${d.name}</h2>
+                
+                ${d.image ? `<div class="mb-8"><img src="${d.image}" alt="${d.name}" class="w-full h-64 object-cover rounded-2xl border border-white/10 shadow-2xl hover:scale-[1.01] transition-transform duration-500"></div>` : ''}
+
+                <div class="p-4 bg-white/5 border-l-4 border-white/20 rounded-r-xl mb-6">
+                    <p class="text-gray-300 italic">${d.descShort}</p>
+                </div>
+
+                <p class="wiki-text border-b border-white/5 pb-6 mb-6">${d.descLong}</p>
+                
+                <div class="flex flex-wrap gap-3 mb-8">
+                    ${d.strains.map(s => `<span class="px-4 py-1.5 bg-black/40 border border-white/10 rounded-lg text-xs font-mono text-gray-300 tracking-wide">${s}</span>`).join('')}
+                </div>
+            </div>
+
+            <div class="mb-12 animate-fade-in" style="animation-delay: 0.1s;">
+                <h4 class="text-white font-bold mb-6 text-xl flex items-center gap-3"><i class="fas fa-cogs" style="color:${d.colors.main}"></i> Mecanismos de Ação</h4>
+                <div class="grid md:grid-cols-2 gap-4">
+                    ${d.mechanisms ? d.mechanisms.map(m => `
+                        <div class="p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-white/20 transition-all hover:-translate-y-1">
+                            <span class="text-white font-bold text-lg block mb-2" style="color:${d.colors.main}">${m.t}</span>
+                            <span class="text-gray-400 text-sm block leading-relaxed">${m.d}</span>
+                        </div>
+                    `).join('') : ''}
+                </div>
+            </div>
+
+            <div class="mb-12 p-8 bg-white/5 rounded-3xl border border-white/5 animate-fade-in" style="animation-delay: 0.15s;">
+                <h4 class="text-white font-bold mb-6 text-xl flex items-center gap-3"><i class="fas fa-sliders-h" style="color:${d.colors.main}"></i> Parâmetros Técnicos</h4>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div><span class="block text-xs text-gray-500 uppercase tracking-widest mb-1">Temp</span><span class="text-white font-mono">${d.tech.temp}</span></div>
+                    <div><span class="block text-xs text-gray-500 uppercase tracking-widest mb-1">pH</span><span class="text-white font-mono">${d.tech.ph}</span></div>
+                    <div><span class="block text-xs text-gray-500 uppercase tracking-widest mb-1">Meio</span><span class="text-white font-mono text-sm">${d.tech.media || 'Padrão'}</span></div>
+                    <div><span class="block text-xs text-gray-500 uppercase tracking-widest mb-1">Conc.</span><span class="text-white font-mono text-sm" style="color:${d.colors.main}">${d.tech.conc}</span></div>
+                </div>
+            </div>
+
+            <div class="mb-12 p-8 bg-white/5 rounded-3xl border-2 border-dashed border-white/10 animate-fade-in" style="animation-delay: 0.18s;">
+                <h4 class="text-white font-bold mb-6 text-xl flex items-center gap-3"><i class="fas fa-prescription-bottle-alt" style="color:${d.colors.main}"></i> Estratégia de Dosagem</h4>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <span class="block text-xs text-gray-500 uppercase tracking-widest mb-2">Alvo</span>
+                        <div class="text-3xl font-mono text-white mb-4">${d.doseInfo.range}</div>
+                        <p class="text-gray-400 text-sm leading-relaxed">${d.doseInfo.justification}</p>
+                    </div>
+                    <div class="relative pl-6 border-l border-white/10">
+                        <i class="fas fa-exclamation-circle absolute -left-3 top-0 text-yellow-500 bg-transparent"></i>
+                        <span class="block text-xs text-gray-500 uppercase tracking-widest mb-2">Ponto Crítico</span>
+                        <p class="text-gray-300 text-sm leading-relaxed">${d.doseInfo.critical}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-12 p-6 rounded-3xl bg-white/5 border border-white/5 shadow-inner animate-fade-in" style="animation-delay: 0.2s;">
+                <h4 class="text-gray-400 font-bold text-xs uppercase tracking-widest mb-4 text-center">${d.chartData.label}</h4>
+                <div class="w-full h-[300px] relative">
+                    <canvas id="wikiChartCanvas"></canvas>
+                </div>
+            </div>
+
+            ${d.flow && d.flow.length > 0 ? `
+            <div class="mb-12 animate-fade-in" style="animation-delay: 0.3s;">
+                <h4 class="text-white font-bold mb-6 text-xl flex items-center gap-3"><i class="fas fa-project-diagram" style="color:${d.colors.main}"></i> Fluxo de Ação</h4>
+                <div class="flex flex-col md:flex-row flex-wrap gap-4 items-center justify-center p-6 bg-white/5 rounded-3xl border border-white/5">
+                    ${d.flow.map((node, i) => `
+                        <div class="flow-node" style="
+                            --glow-color:${d.colors.main}; 
+                            animation: fadeIn 0.5s ease-out forwards ${i * 0.2}s, 
+                                       glowFlow 3s ease-in-out infinite ${1 + (i * 0.6)}s;
+                            opacity: 0;">
+                            <strong style="color:${d.colors.main}">${node.t}</strong>
+                            <span class="text-xs text-gray-400 leading-tight block mt-1">${node.s}</span>
+                        </div>
+                        ${i < d.flow.length - 1 ? `<i class="fas fa-arrow-right text-gray-600 text-xl transform rotate-90 md:rotate-0 opacity-50"></i>` : ''}
+                    `).join('')}
+                </div>
+            </div>` : ''}
+
+            ${d.table && d.table.length > 0 ? `
+            <div class="mb-12 animate-fade-in" style="animation-delay: 0.4s;">
+                <h4 class="text-white font-bold mb-6 text-xl flex items-center gap-3"><i class="fas fa-table" style="color:${d.colors.main}"></i> Resultados</h4>
+                <div class="overflow-x-auto rounded-xl border border-white/10 shadow-xl">
+                    <table class="w-full text-left border-collapse bg-transparent text-sm">
+                        <thead class="bg-white/5 text-gray-400 uppercase text-xs font-bold">
+                            <tr>
+                                <th class="p-4 border-b border-white/10 min-w-[150px]">Agente</th>
+                                <th class="p-4 border-b border-white/10 min-w-[150px]">Alvo/Cultura</th>
+                                <th class="p-4 border-b border-white/10 min-w-[200px]">Mecanismo</th>
+                                <th class="p-4 border-b border-white/10 min-w-[200px]">Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-300">
+                            ${d.table.map(row => `
+                                <tr class="hover:bg-white/5 border-b border-white/5 last:border-0 transition-colors">
+                                    <td class="p-4 font-bold text-white">${row.c1}</td>
+                                    <td class="p-4">${row.c2}</td>
+                                    <td class="p-4 text-bio-accent font-medium">${row.c3}</td>
+                                    <td class="p-4 font-bold" style="color:${d.colors.main}">${row.c4}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>` : ''}
+
+            <div class="glass-panel rounded-3xl p-10 border-l-[6px] mb-10 bg-gradient-to-r from-white/5 to-transparent animate-fade-in" style="border-color:${d.colors.main}; animation-delay: 0.5s;">
+                <h3 class="text-3xl text-white font-bold mb-8 flex items-center gap-4"><i class="fas fa-clipboard-check" style="color:${d.colors.main}"></i> Protocolo</h3>
+                <div class="grid md:grid-cols-2 gap-10 mb-8">
+                    <div><span class="data-label block mb-2 text-xs text-gray-500 uppercase">Culturas</span><p class="text-lg text-white font-light">${d.app.crops}</p></div>
+                    <div><span class="data-label block mb-2 text-xs text-gray-500 uppercase">Ambiente</span><p class="text-lg text-white font-light">${d.app.env}</p></div>
+                    <div><span class="data-label block mb-2 text-xs text-gray-500 uppercase">Método</span><p class="text-lg text-white font-light">${d.app.method}</p></div>
+                    <div><span class="data-label block mb-2 text-xs text-gray-500 uppercase">Solo</span><p class="text-lg text-white font-light">${d.app.soil}</p></div>
+                </div>
+                
+                <div class="pt-8 border-t border-white/10 flex gap-6 items-start">
+                    <i class="fas fa-quote-left text-4xl opacity-50" style="color:${d.colors.main}"></i>
+                    <div>
+                        <span class="block mb-2 text-xs text-gray-500 uppercase tracking-widest">Case Study</span>
+                        <p class="text-xl text-white italic font-light leading-relaxed">"${d.field}"</p>
+                    </div>
+                </div>
+            </div>
+
+            ${effectImagesHtml}
+            ${caseStudyHtml}
+        `;
+        
+        content.innerHTML = html;
+
+        // --- 4. RENDERIZAÇÃO DOS GRÁFICOS ---
+        setTimeout(() => {
+            const isLight = document.documentElement.classList.contains('light-mode');
+            const textColor = isLight ? '#000000' : '#cbd5e1';
+            const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+
+            // Opções comuns
+            const chartOptions = (label) => ({
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    r: {
+                        grid: { color: gridColor },
+                        pointLabels: { color: textColor, font: { size: 13, weight: '600' } },
+                        ticks: { display: false, backdropColor: 'transparent' },
+                        suggestedMin: 0, suggestedMax: 100
+                    }
+                }
+            });
+
+            // Wiki Radar Chart
+            const ctx = document.getElementById('wikiChartCanvas');
+            if(ctx) {
+                if(currentWikiChart) currentWikiChart.destroy();
+                const chartCtx = ctx.getContext('2d');
+                const gradient = chartCtx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, `${d.colors.hex}E6`);
+                gradient.addColorStop(1, `${d.colors.hex}4D`);
+
+                currentWikiChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: d.chartData.labels,
+                        datasets: [{
+                            label: d.chartData.label,
+                            data: d.chartData.data,
+                            backgroundColor: gradient,
+                            borderColor: d.colors.hex,
+                            borderWidth: 1,
+                        }]
+                    },
+                    options: chartOptions(d.chartData.label)
+                });
+            }
+
+            // Case Study Bar Chart
+            if (d.caseStudy && document.getElementById('caseStudyChart')) {
+                if (currentCaseStudyChart) currentCaseStudyChart.destroy();
+                const ctx2 = document.getElementById('caseStudyChart').getContext('2d');
+                currentCaseStudyChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: d.caseStudy.chartData.labels,
+                        datasets: [{
+                            label: 'Resultado',
+                            data: d.caseStudy.chartData.data,
+                            backgroundColor: d.colors.hex,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+                            x: { grid: { display: false }, ticks: { color: textColor } }
+                        }
+                    }
+                });
+            }
+        }, 50);
+    }
+
+    // ==================================================================
+    // 4. LAB NOVO & FUNÇÕES (CORRIGIDO E COMPLETO)
+    // ==================================================================
+    const bioDataLab = {
+        bacillus: { name: 'Priestia', colors: { hex: '#38bdf8' }, lab: { temp: 30, ph: 7.0, conc: 9.5, aia: 40, psol: 90, nfix: 20, biocontrol: 95, cost: 30, acc: 95, isr: 85 }, stressResistance: 0.95, resistanceMech: "Esporulação" },
+        pseudomonas: { name: 'Pseudomonas', colors: { hex: '#a855f7' }, lab: { temp: 28, ph: 6.5, conc: 9.0, aia: 55, psol: 95, nfix: 10, biocontrol: 80, cost: 70, acc: 80, isr: 90 }, stressResistance: 0.50, resistanceMech: "Biofilme" },
+        fixadores: { name: 'Azospirillum', colors: { hex: '#22c55e' }, lab: { temp: 29, ph: 6.5, conc: 8.0, aia: 90, psol: 40, nfix: 60, biocontrol: 30, cost: 60, acc: 50, isr: 30 }, stressResistance: 0.60, resistanceMech: "Cistos" },
+        trichoderma: { name: 'Trichoderma', colors: { hex: '#fbbf24' }, lab: { temp: 25, ph: 6.0, conc: 8.5, aia: 30, psol: 60, nfix: 0, biocontrol: 90, cost: 40, acc: 20, isr: 100 }, stressResistance: 0.30, resistanceMech: "Baixa" },
+        rhizobium: { name: 'Bradyrhizobium', colors: { hex: '#f97316' }, lab: { temp: 30, ph: 6.8, conc: 9.2, aia: 30, psol: 20, nfix: 100, biocontrol: 40, cost: 95, acc: 20, isr: 50 }, stressResistance: 0.40, resistanceMech: "Nódulo" },
+        bioinseticidas: { name: 'Beauveria', colors: { hex: '#6366f1' }, lab: { temp: 25, ph: 6.5, conc: 8.0, aia: 0, psol: 0, nfix: 0, biocontrol: 100, cost: 40, acc: 10, isr: 40 }, stressResistance: 0.20, resistanceMech: "Nenhuma" },
+        methylobacterium: { name: 'Methylobacterium', colors: { hex: '#ec4899' }, lab: { temp: 28, ph: 6.5, conc: 8.0, aia: 65, psol: 30, nfix: 75, biocontrol: 20, cost: 50, acc: 30, isr: 40 }, stressResistance: 0.85, resistanceMech: "Pigmentos" },
+        pnsb: { name: 'PNSB', colors: { hex: '#ef4444' }, lab: { temp: 28, ph: 7.0, conc: 7.0, aia: 100, psol: 15, nfix: 45, biocontrol: 70, cost: 20, acc: 10, isr: 20 }, stressResistance: 0.75, resistanceMech: "Biofilme" },
+        mycorrhiza: { name: 'Micorrizas', colors: { hex: '#10b981' }, lab: { temp: 28, ph: 6.5, conc: 5.0, aia: 10, psol: 100, nfix: 0, biocontrol: 30, cost: 80, acc: 40, isr: 60 }, stressResistance: 0.80, resistanceMech: "Glomalina" }
+    };
+
+    window.bubbleChartLab = null;
+
+    function initLab() {
+        const ctx = document.getElementById('bubbleLab');
+        if(!ctx) return;
+        window.bubbleChartLab = new Chart(ctx.getContext('2d'), {
+            type: 'bubble',
+            data: { datasets: [] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { x: { title: { display: true, text: 'Temp' }, min: 20, max: 35 }, y: { title: { display: true, text: 'Log UFC' }, min: 3 } },
+                plugins: { tooltip: { callbacks: { label: (c) => `${Object.values(bioDataLab)[c.datasetIndex].name}: ${Math.round(c.raw.r)}` } } }
+            }
+        });
+    }
+
+    function updateBubbleChart() {
+        if (!window.bubbleChartLab) return;
+        const axisX = document.getElementById('axisX').value;
+        const axisY = document.getElementById('axisY').value;
+        const axisR = document.getElementById('axisR').value;
+        const slider = document.getElementById('stressSlider');
+        const stressLevel = slider ? slider.value / 100 : 0;
+        
+        if(document.getElementById('stressValue')) document.getElementById('stressValue').innerText = `${Math.round(stressLevel * 100)}%`;
+
+        const isLight = document.documentElement.classList.contains('light-mode');
+        const textColor = isLight ? '#000' : '#cbd5e1';
+        const gridColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+
+        window.bubbleChartLab.options.scales.x.ticks.color = textColor;
+        window.bubbleChartLab.options.scales.y.ticks.color = textColor;
+        window.bubbleChartLab.options.scales.x.grid.color = gridColor;
+        window.bubbleChartLab.options.scales.y.grid.color = gridColor;
+        if(window.bubbleChartLab.options.plugins.legend) window.bubbleChartLab.options.plugins.legend.labels.color = textColor;
+
+        window.bubbleChartLab.options.scales.x.title.text = axisX === 'temp' ? 'Temperatura' : 'pH';
+        window.bubbleChartLab.options.scales.x.min = axisX === 'temp' ? 20 : 4;
+        window.bubbleChartLab.options.scales.x.max = axisX === 'temp' ? 35 : 9;
+
+        window.bubbleChartLab.options.scales.y.title.text = axisY === 'conc' ? 'Log Concentração' : 'Custo ATP';
+        window.bubbleChartLab.options.scales.y.min = axisY === 'conc' ? 3 : -10;
+        window.bubbleChartLab.options.scales.y.max = axisY === 'conc' ? 12 : 110;
+
+        window.bubbleChartLab.data.datasets = Object.keys(bioDataLab).map(key => {
+            const d = bioDataLab[key];
+            const impact = 1 - (stressLevel * (1.3 - d.stressResistance));
+            let r = (d.lab[axisR] || 10) * 0.3 * impact;
+            let yVal = axisY === 'conc' ? d.lab.conc : d.lab.cost;
+            
+            return { 
+                label: d.name, 
+                data: [{ x: d.lab[axisX], y: yVal, r: Math.max(0, r) }], 
+                backgroundColor: d.colors.hex + (impact < 0.3 ? '33' : 'BB'), 
+                borderColor: d.colors.hex 
+            };
+        });
+        window.bubbleChartLab.update();
+        
+        const box = document.getElementById('context-box');
+        const warn = document.getElementById('dynamic-warning');
+        if(box) {
+            if(stressLevel > 0.7) { box.className="mt-4 p-4 rounded-xl border-l-4 border-red-500 bg-red-500/10 flex gap-4"; if(warn) warn.style.opacity='1'; document.getElementById('context-title').innerText = "Colapso Osmótico"; document.getElementById('context-desc').innerText = "Mortalidade celular elevada."; }
+            else { box.className="mt-4 p-4 rounded-xl border-l-4 border-blue-500 bg-blue-500/10 flex gap-4"; if(warn) warn.style.opacity='0'; document.getElementById('context-title').innerText = "Condições Homeostáticas"; document.getElementById('context-desc').innerText = "Metabolismo ativo e eficiente."; }
+        }
+    }
+
+    // ==================================================================
+    // 5. INIT MASTER (UNIFICADO E ORDENADO)
+    // ==================================================================
+    window.onload = function() {
+        console.log("BioHub Starting...");
+        
+        // 1. Inicializa Módulos (Wiki, Mapa)
+        if (typeof renderWiki === 'function') renderWiki();
+        if (typeof renderSolverGrid === 'function') renderSolverGrid();
+        
+        // 2. Inicializa Lab (Novo)
+        if (typeof initLab === 'function') initLab();
+        
+        // 3. Inicializa Visuais (DIAGRAMA DEVE SER CRIADO AQUI)
+        if (typeof createBacteria === 'function') createBacteria();
+        if (typeof createHotspots === 'function') createHotspots();
+        
+        // 4. Inicializa Ícones
+        if(window.lucide) lucide.createIcons();
+        
+        // 5. Correção Tema Holobionte (React)
+        if (!document.documentElement.classList.contains('light-mode')) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        if (typeof updateBubbleChart === 'function') updateBubbleChart();
+        console.log("BioHub Ready.");
+    };
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- ÍCONES ---
+        const IconBase = ({ children, className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
+        );
+
+        const Sun = ({ className }) => <IconBase className={className}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></IconBase>;
+        const Moon = ({ className }) => <IconBase className={className}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></IconBase>;
+        const Dna = ({ className }) => <IconBase className={className}><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="M17 6l-2.5-2.5"/><path d="M14 8l-1-1"/><path d="M7 18l2.5 2.5"/><path d="M3.5 14.5l1 1"/><path d="M20 9l-2.5 2.5"/><path d="M14.5 16.5l1 1"/><path d="M11 5l-1 1"/><path d="M3 3l2.5 2.5"/></IconBase>;
+        const Zap = ({ className }) => <IconBase className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></IconBase>;
+        const Activity = ({ className }) => <IconBase className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></IconBase>;
+        const ShieldCheck = ({ className }) => <IconBase className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></IconBase>;
+        const Sprout = ({ className }) => <IconBase className={className}><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.6"/><path d="M14 20a5 5 0 0 0 5-5c0-3.35-4-6-6-6a5 5 0 0 0-5 5c0 3.35 4 6 6 6Z"/></IconBase>;
+        const Droplets = ({ className }) => <IconBase className={className}><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.35"/></IconBase>;
+        const ThermometerSnowflake = ({ className }) => <IconBase className={className}><path d="M2 12h10"/><path d="M9 4v16"/><path d="M3 9l3 3-3 3"/><path d="M12 6L9 9 6 6"/><path d="M6 18l3-3 3 3"/><path d="M20 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></IconBase>;
+        const Microscope = ({ className }) => <IconBase className={className}><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></IconBase>;
+        const Layers = ({ className }) => <IconBase className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></IconBase>;
+        const ArrowRight = ({ className }) => <IconBase className={className}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></IconBase>;
+
+        const CATEGORIES = {
+            ALL: 'Todos',
+            ECOLOGY: 'Ecologia & Futuro',
+            NUTRITION: 'Nutrição Mineral',
+            STRESS: 'Resiliência ao Estresse',
+            BIOCONTROL: 'Biocontrole & Imunidade'
+        };
+
+        const data = [
+            { id: 1, category: CATEGORIES.ECOLOGY, title: "1. Paradigma do Holobionte", icon: <Dna className="w-8 h-8 text-purple-600 dark:text-purple-400" />, shortDesc: "O 'Super-Organismo' Vegetal", color: "purple", position: { x: 50, y: 50 }, details: { concept: "Unidade Evolutiva (Hologenoma)", mechanism: "A planta não evolui sozinha. O genoma vegetal + metagenoma microbiano co-evoluem. Inclui a distinção entre ePGPR (extracelulares) e iPGPR (endofíticas).", molecular: "Rizodeposição & Exsudados: A planta investe até 30% do carbono fixado para criar um 'efeito rizosférico', secretando açúcares e flavonoides que recrutam o microbioma específico.", implication: "Mudar o foco de 'adubar a planta' para 'alimentar o holobionte'." } },
+            { id: 2, category: CATEGORIES.NUTRITION, title: "2. Nitrogênio & Energia", icon: <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />, shortDesc: "Nitrogenase e Custo de ATP", color: "blue", position: { x: 20, y: 25 }, details: { concept: "Fixação Biológica de Nitrogênio (FBN)", mechanism: "A enzima Nitrogenase (genes nif) quebra a tripla ligação do N₂ atmosférico, transformando-o em NH₃.", molecular: "Engenharia Metabólica: O processo custa 16 ATPs por molécula de N₂. Bactérias modificadas redirecionam carbono para gerar mais ATP, maximizando a fixação.", implication: "Uso de hemoglobinas bacterianas para gerenciar o paradoxo do oxigênio." } },
+            { id: 3, category: CATEGORIES.NUTRITION, title: "3. Solubilização de Fósforo", icon: <Activity className="w-6 h-6 text-orange-600 dark:text-orange-400" />, shortDesc: "A via PQQ-GDH", color: "orange", position: { x: 80, y: 25 }, details: { concept: "Mineração de Fósforo", mechanism: "Bactérias acidificam a rizosfera para dissolver fosfatos de cálcio/ferro insolúveis.", molecular: "Mecanismo PQQ-GDH: A enzima Glucose Desidrogenase (cofator PQQ) oxida glucose em Ácido Glucônico. Este ácido atua como 'martelo químico'.", implication: "Inclui também mineralização de fitatos orgânicos via fitases." } },
+            { id: 4, category: CATEGORIES.BIOCONTROL, title: "4. Sideróforos: Arma Dupla", icon: <ShieldCheck className="w-6 h-6 text-red-600 dark:text-red-400" />, shortDesc: "Nutrição + Biocontrole", color: "red", position: { x: 20, y: 75 }, details: { concept: "A Guerra pelo Ferro", mechanism: "Sideróforos são quelantes de alta afinidade que 'roubam' ferro do ambiente.", molecular: "Efeito Duplo: 1) Nutrem a planta (que absorve o complexo Fe-Sideróforo). 2) Matam patógenos por inanição ('fome de ferro').", implication: "Biofungicida natural baseado em privação de recursos." } },
+            { id: 5, category: CATEGORIES.ECOLOGY, title: "5. Ajuste Fino Hormonal", icon: <Sprout className="w-6 h-6 text-green-600 dark:text-green-500" />, shortDesc: "IAA e Arquitetura Radicular", color: "green", position: { x: 80, y: 75 }, details: { concept: "Fitostimulação (Auxinas)", mechanism: "Bactérias convertem triptofano exsudado pela raiz em Ácido Indol-3-Acético (IAA).", molecular: "Equilíbrio Delicado: Doses ótimas de IAA bacteriano aumentam pêlos radiculares e raízes laterais. Doses excessivas inibem o crescimento.", implication: "Maximização da área superficial da raiz para absorção de água/nutrientes." } },
+            { id: 6, category: CATEGORIES.STRESS, title: "6. ACC Desaminase", icon: <Activity className="w-6 h-6 text-pink-600 dark:text-pink-400" />, shortDesc: "O 'Freio' do Estresse", color: "pink", position: { x: 50, y: 15 }, details: { concept: "Alívio do Estresse de Etileno", mechanism: "Sob estresse (seca/sal), a planta produz etileno excessivo que trava o crescimento da raiz.", molecular: "Enzima ACC Desaminase (acdS): A bactéria 'come' o precursor do etileno (ACC) exsudado pela raiz, baixando os níveis internos de etileno.", implication: "A arma mais poderosa para manter crescimento em solos salinos ou alagados." } },
+            { id: 7, category: CATEGORIES.STRESS, title: "7. Trehalose & Seca", icon: <Droplets className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />, shortDesc: "Osmoproteção Molecular", color: "cyan", position: { x: 50, y: 85 }, details: { concept: "Resistência à Dessecação", mechanism: "A Trehalose é um açúcar que substitui a água nas células, prevenindo colapso de membranas ('vitrificação').", molecular: "Sinalização ABA: A trehalose bacteriana também induz a planta a produzir Ácido Abscísico (ABA), fechando estômatos.", implication: "Tecnologia vital para agricultura em climas semi-áridos." } },
+            { id: 8, category: CATEGORIES.STRESS, title: "8. AFPs Bacterianas", icon: <ThermometerSnowflake className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />, shortDesc: "Anticongelamento", color: "indigo", position: { x: 10, y: 50 }, details: { concept: "Proteção contra Geada", mechanism: "Bactérias psicrotolerantes secretam Proteínas de Ligação ao Gelo (AFPs) no apoplasto vegetal.", molecular: "Inibição de Recristalização: As AFPs impedem que microcristais de gelo cresçam e virem cristais grandes e pontiagudos que furariam as células.", implication: "Extensão da janela de cultivo em regiões frias." } },
+            { id: 9, category: CATEGORIES.BIOCONTROL, title: "9. Imunidade (ISR)", icon: <ShieldCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />, shortDesc: "Vacinação Vegetal", color: "emerald", position: { x: 90, y: 50 }, details: { concept: "Indução de Resistência Sistêmica (ISR)", mechanism: "Não mata o patógeno diretamente, mas deixa o sistema imune da planta em 'alerta máximo' (Priming).", molecular: "Marcadores Enzimáticos: Aumenta atividade de PAL (lignina), PPO e POD (oxidantes). Mediada por Jasmonato/Etileno.", implication: "Proteção de amplo espectro contra vírus, bactérias e insetos." } },
+            { id: 10, category: CATEGORIES.ECOLOGY, title: "10. SynComs & Futuro", icon: <Microscope className="w-6 h-6 text-teal-600 dark:text-teal-400" />, shortDesc: "Engenharia da Rizosfera", color: "teal", position: { x: 90, y: 90 }, details: { concept: "Comunidades Sintéticas (SynComs)", mechanism: "Substituir estirpes isoladas por consórcios desenhados com funções complementares (ex: Fixador de N + Solubilizador de P).", molecular: "Biased Rhizosphere: Plantas transgênicas que exsudam 'alimentos exclusivos' (opinas) para alimentar apenas o SynCom benéfico.", implication: "O fim da inconsistência dos bioinsumos em campo." } }
+        ];
+
+        const Diagram = () => {
+            const [selectedNode, setSelectedNode] = useState(data[0]);
+            const [activeCategory, setActiveCategory] = useState(CATEGORIES.ALL);
+            const [isMobile, setIsMobile] = useState(false);
+            
+            useEffect(() => {
+                const checkMobile = () => setIsMobile(window.innerWidth < 768);
+                checkMobile();
+                window.addEventListener('resize', checkMobile);
+                return () => window.removeEventListener('resize', checkMobile);
+            }, []);
+
+            const filteredNodes = useMemo(() => {
+                if (activeCategory === CATEGORIES.ALL) return data;
+                return data.filter(node => node.category === activeCategory);
+            }, [activeCategory]);
+
+            return (
+                <div className="min-h-screen font-sans p-4 md:p-8 flex flex-col items-center selection:bg-green-500 selection:text-white 
+                                bg-slate-50 text-slate-900 
+                                dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 w-full">
+                    
+                    {/* Header Area */}
+                    <header className="mb-8 text-center max-w-3xl mt-6 relative z-10">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-4 transition-colors
+                                      bg-white border border-slate-200 text-green-600 shadow-sm
+                                      dark:bg-slate-800 dark:border-slate-700 dark:text-green-400 dark:shadow-none">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
+                            Mapa Interativo Enriquecido
+                        </div>
+                        <h1 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-500 via-teal-500 to-blue-600 dark:from-green-400 dark:via-teal-400 dark:to-blue-500 mb-3 tracking-tight">
+                            O Universo Oculto da Rizosfera
+                        </h1>
+                        <p className="text-lg leading-relaxed text-slate-600 dark:text-slate-400">
+                            Explore os mecanismos moleculares que transformam plantas em holobiontes de alta performance.
+                        </p>
+                    </header>
+
+                    {/* Filter Tabs */}
+                    <div className="flex flex-wrap justify-center gap-2 mb-8 w-full max-w-4xl relative z-10">
+                        {Object.values(CATEGORIES).map((cat) => (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border
+                                    ${activeCategory === cat 
+                                        ? 'bg-white border-green-500 text-green-600 shadow-md dark:bg-slate-800 dark:text-green-400 dark:shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
+                                        : 'bg-white/50 border-slate-200 text-slate-500 hover:bg-white hover:border-slate-300 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:bg-slate-800'
+                                    }
+                                `}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 items-start">
+                        
+                        {/* Interactive Diagram Canvas */}
+                        <div className="relative w-full lg:w-2/3 h-[100vh] rounded-3xl shadow-2xl overflow-hidden group transition-colors duration-500 bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+                            
+                            {/* --- IMAGEM DE FUNDO --- */}
+                            <video 
+                                src="./assets/Looping_animation_of_202511241815.mp4" 
+                                autoPlay
+								loop
+								muted
+								playsInline
+								className="absolute inset-0 w-full h-full object-cover opacity-70 z-10"                            
+                            ></video>
+
+                            {/* SVG Connections */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-20">
+                                <defs>
+                                    <linearGradient id="gradLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.3" />
+                                        <stop offset="50%" stopColor="#22c55e" stopOpacity="0.8" />
+                                        <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.3" />
+                                    </linearGradient>
+                                </defs>
+                                {filteredNodes.filter(n => n.id !== 1).map((node) => (
+                                    <line
+                                        key={`line-${node.id}`}
+                                        x1={`${data[0].position.x}%`}
+                                        y1={`${data[0].position.y}%`}
+                                        x2={`${node.position.x}%`}
+                                        y2={`${node.position.y}%`}
+                                        stroke="url(#gradLine)"
+                                        strokeWidth="2" 
+                                        strokeDasharray="5,5"
+                                        className="opacity-60 transition-all duration-700"
+                                    />
+                                ))}
+                            </svg>
+
+                            {/* Nodes Render */}
+                            {filteredNodes.map((node) => {
+                                const isSelected = selectedNode.id === node.id;
+                                const isCenter = node.id === 1;
+
+                                return (
+                                    <button
+                                        key={node.id}
+                                        onClick={() => setSelectedNode(node)}
+                                        className={`absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center transition-all duration-500 group/node outline-none z-30
+                                            ${isSelected ? 'scale-110' : 'scale-100 hover:scale-105 opacity-90 hover:opacity-100'}
+                                        `}
+                                        style={{ left: `${node.position.x}%`, top: `${node.position.y}%` }}
+                                    >
+                                        {isSelected && (
+                                            <div className={`absolute inset-0 rounded-full bg-${node.color}-500 blur-xl opacity-40 animate-pulse`}></div>
+                                        )}
+                                        <div className={`
+                                            relative flex items-center justify-center rounded-2xl border transition-all duration-300 backdrop-blur-md shadow-lg
+                                            ${isCenter ? 'w-20 h-20 md:w-24 md:h-24' : 'w-14 h-14 md:w-16 md:h-16'}
+                                            ${isSelected 
+                                                ? `bg-white/95 border-${node.color}-500 shadow-xl shadow-${node.color}-500/40 dark:bg-slate-800/90` 
+                                                : `bg-white/70 border-slate-300 hover:border-${node.color}-500/50 dark:bg-slate-900/70 dark:border-slate-600`
+                                            }
+                                        `}>
+                                            {node.icon}
+                                        </div>
+                                        <div className={`
+                                            mt-3 px-3 py-1.5 rounded-lg text-xs font-bold backdrop-blur-md border transition-all duration-300 whitespace-nowrap shadow-md
+                                            ${isSelected 
+                                                ? `bg-white/95 text-slate-900 border-${node.color}-500/50 translate-y-0 opacity-100 dark:bg-slate-900/95 dark:text-white` 
+                                                : `bg-white/60 text-slate-700 border-transparent translate-y-2 opacity-0 group-hover/node:opacity-100 group-hover/node:translate-y-0 dark:bg-slate-900/60 dark:text-slate-200`
+                                            }
+                                            ${isMobile && !isSelected ? 'hidden' : 'block'}
+                                        `}>
+                                            {node.title.split('.')[1]}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Info Panel */}
+                        <div className="w-full lg:w-1/3 flex flex-col gap-4">
+                            <div className="backdrop-blur-xl rounded-3xl overflow-hidden shadow-2xl animate-fade-in-up transition-colors duration-300
+                                          bg-white/80 border border-white/50
+                                          dark:bg-slate-800/50 dark:border-slate-700/50">
+                                <div className={`p-6 border-b relative overflow-hidden transition-colors duration-300
+                                               border-slate-200 bg-gradient-to-br from-slate-50 to-white
+                                               dark:border-slate-700/50 dark:bg-gradient-to-br dark:from-slate-800 dark:to-slate-900`}>
+                                    <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2
+                                                   bg-${selectedNode.color}-500/20 dark:bg-${selectedNode.color}-500/10`}></div>
+                                    <div className="flex items-center gap-3 mb-3 relative z-10">
+                                        <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border
+                                                        bg-${selectedNode.color}-100 text-${selectedNode.color}-700 border-${selectedNode.color}-200
+                                                        dark:bg-${selectedNode.color}-500/20 dark:text-${selectedNode.color}-300 dark:border-${selectedNode.color}-500/30`}>
+                                            {selectedNode.category}
+                                        </span>
+                                    </div>
+                                    <h2 className="text-2xl font-bold mb-2 relative z-10 text-slate-800 dark:text-white">
+                                        {selectedNode.title}
+                                    </h2>
+                                    <p className={`font-medium text-sm relative z-10 text-${selectedNode.color}-600 dark:text-${selectedNode.color}-300`}>
+                                        {selectedNode.shortDesc}
+                                    </p>
+                                </div>
+                                <div className="p-6 space-y-6 max-h-[500px] overflow-y-auto custom-scrollbar">
+                                    <div>
+                                        <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-2 text-slate-500 dark:text-slate-500">
+                                            <Layers className="w-3 h-3" /> Conceito Chave
+                                        </h3>
+                                        <p className="leading-relaxed text-sm text-slate-700 dark:text-slate-300">
+                                            {selectedNode.details.concept}
+                                        </p>
+                                    </div>
+                                    <div className="p-4 rounded-xl border transition-colors bg-slate-50 border-slate-200 hover:border-slate-300 dark:bg-slate-900/50 dark:border-slate-700/50 dark:hover:border-slate-600">
+                                        <h3 className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">
+                                            <Microscope className="w-3 h-3" /> Mecanismo Molecular
+                                        </h3>
+                                        <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                                            {selectedNode.details.molecular}
+                                        </p>
+                                    </div>
+                                    <div className="p-4 rounded-xl border transition-colors bg-slate-50 border-slate-200 hover:border-slate-300 dark:bg-slate-900/50 dark:border-slate-700/50 dark:hover:border-slate-600">
+                                        <h3 className="flex items-center gap-2 text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-widest mb-2">
+                                            <Activity className="w-3 h-3" /> Mecanismo Geral
+                                        </h3>
+                                        <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                                            {selectedNode.details.mechanism}
+                                        </p>
+                                    </div>
+                                    <div className={`relative pl-4 border-l-2 border-${selectedNode.color}-500/50`}>
+                                        <h3 className={`flex items-center gap-2 text-xs font-bold text-${selectedNode.color}-600 dark:text-${selectedNode.color}-400 uppercase tracking-widest mb-1`}>
+                                            <Sprout className="w-3 h-3" /> Impacto Agronômico
+                                        </h3>
+                                        <p className="text-sm italic text-slate-600 dark:text-slate-400">
+                                            {selectedNode.details.implication}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="p-4 border-t transition-colors bg-slate-50/50 border-slate-200 dark:bg-slate-900/30 dark:border-slate-700/50">
+                                    <div className="flex items-center justify-between text-xs text-slate-500">
+                                        <span>ID: #{selectedNode.id}</span>
+                                        <span className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors">
+                                            Ver detalhes no texto <ArrowRight className="w-3 h-3" />
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root-holobionte'));
+        root.render(<Diagram />);
+    </script>
+
+<script>
+// Desabilitar clique direito
+document.addEventListener('contextmenu', event => event.preventDefault());
+
+// Bloquear teclas de inspeção
+document.onkeydown = function(e) {
+    if (e.keyCode === 123) return false; // F12
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 73) return false; // Ctrl+Shift+I
+    if (e.ctrlKey && e.keyCode === 85) return false; // Ctrl+U
+    if (e.ctrlKey && e.keyCode === 83) return false; // Ctrl+S
+};
+
+// Impedir seleção de texto
+document.addEventListener('selectstart', e => e.preventDefault());
+
+// Impedir arrastar imagens
+document.addEventListener('dragstart', e => e.preventDefault());
+</script>
+
+<style id="flow-anim">
+@keyframes flowPulse {
+  0%   { opacity: 0; transform: scale(0.90); }
+  30%  { opacity: 1; transform: scale(1.03); }
+  60%  { opacity: 1; transform: scale(1.00); }
+  100% { opacity: 0; transform: scale(0.90); }
+}
+
+.flow-seq {
+  opacity: 0 !important;
+  animation: flowPulse 2.2s ease-in-out infinite !important;
+}
+</style>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Guarda a referência da função original definida no bloco anterior
+    const oldSwitch = window.switchView;
+  
+    // Sobrescreve a função para injetar a lógica dos Iframes
+    window.switchView = function(view){
+        // Executa a troca visual normal
+        if(oldSwitch) oldSwitch(view); 
+    
+        if(view === "factors"){
+            const isLight = document.documentElement.classList.contains('light-mode');
+      
+            // 1. Carrega Simulador (fatoresnovo3.html)
+            const c = document.getElementById("simulador-fatores-container");
+            // Verifica se o container existe e se já não foi carregado
+            if(c && !c.dataset.loaded){
+                c.dataset.loaded = "true"; // Marca como carregado para não duplicar
+                const f = document.createElement("iframe");
+                f.src = "fatoresnovo3.html";
+                f.style.width = "100%";
+                f.style.height = "850px";
+                f.style.border = "none";
+                f.style.background = "transparent";
+                
+                // Quando carregar, força o tema correto imediatamente
+                f.onload = () => {
+                    if(isLight) f.contentWindow.postMessage('force-light', '*');
+                };
+                c.appendChild(f);
+            }
+
+            // 2. Carrega Analytics (analytics.html)
+            const a = document.getElementById("analytics-container");
+            if(a && !a.dataset.loaded){
+                a.dataset.loaded = "true";
+                const f2 = document.createElement("iframe");
+                f2.src = "analytics.html";
+                f2.style.width = "100%";
+                f2.style.height = "1100px";
+                f2.style.border = "none";
+                f2.style.background = "transparent";
+                
+                // Quando carregar, força o tema correto imediatamente
+                f2.onload = () => {
+                    if(isLight) f2.contentWindow.postMessage('force-light', '*');
+                };
+                a.appendChild(f2);
+            }
+        }
+    };
+});
+</script>
+</body>
+</html>
