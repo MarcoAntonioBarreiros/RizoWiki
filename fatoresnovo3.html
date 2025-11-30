@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Viabilidade de Inoculantes</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@300;500;700&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Space Grotesk', 'sans-serif'] },
+                    colors: {
+                        bio: { dark: '#050816', panel: '#0f172a', accent: '#0ea5e9', leaf: '#22c55e', red: '#ef4444', yellow: '#eab308' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050816;
+            color: #cbd5e1;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Painéis mais compactos */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: #ef4444;
+            cursor: pointer;
+            margin-top: -5px;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23cbd5e1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.2em 1.2em;
+            -webkit-appearance: none;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Adicione isso APÓS os estilos existentes no fatoresnovo3.html */
+
+        /* --- MODO CLARO (LIGHT MODE) --- */
+        html.light-mode body {
+            background-color: #f1f5f9 !important;
+            /* Fundo Claro */
+            color: #1e293b !important;
+            /* Texto Escuro */
+        }
+
+        html.light-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.85) !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        html.light-mode h2,
+        html.light-mode h3,
+        html.light-mode h4,
+        html.light-mode #survival-title,
+        html.light-mode #final-base,
+        html.light-mode #val-time,
+        html.light-mode #val-temp {
+            color: #0f172a !important;
+            /* Títulos pretos */
+        }
+
+        html.light-mode p,
+        html.light-mode #survival-desc,
+        html.light-mode .text-gray-400 {
+            color: #475569 !important;
+            /* Cinza médio */
+        }
+
+        /* Ajuste nos inputs Range para ficarem visíveis no claro */
+        html.light-mode input[type=range]::-webkit-slider-runnable-track {
+            background: #cbd5e1 !important;
+        }
+
+        /* Ajuste no Select */
+        html.light-mode select {
+            color: #0f172a !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%230f172a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+        }
+
+        html.light-mode select option {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        /* Ajuste das Badges e Botões Químicos */
+        html.light-mode .chem-btn {
+            background: #e2e8f0 !important;
+            border-color: #cbd5e1 !important;
+            color: #64748b !important;
+        }
+
+        html.light-mode .chem-btn:hover {
+            background: #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+    </style>
+</head>
+
+<body class="p-2 md:p-4 min-h-screen flex flex-col justify-start">
+
+    <section id="view-factors" class="w-full max-w-6xl mx-auto">
+
+        <div class="flex flex-col md:flex-row justify-between items-end mb-4 gap-4 border-b border-white/10 pb-3">
+            <div>
+                <div
+                    class="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] font-bold tracking-widest uppercase mb-1">
+                    <i class="fas fa-microscope"></i> Simulador Bio-Agronômico
+                </div>
+                <h2 class="font-display text-2xl md:text-3xl text-white font-bold mb-0">Viabilidade no Campo</h2>
+            </div>
+
+            <div class="glass-panel px-4 py-2 rounded-lg w-full md:w-auto border-l-4 border-bio-leaf">
+                <label class="block text-[9px] font-bold text-bio-leaf uppercase mb-0 tracking-widest">Organismo
+                    Alvo</label>
+                <select id="organism-select"
+                    class="bg-transparent text-white text-base md:text-lg font-bold outline-none w-full cursor-pointer pr-8"
+                    onchange="updateSurvival()">
+                    <option value="bacillus" class="bg-slate-900">Bacillus (Esporos)</option>
+                    <option value="brady" class="bg-slate-900">Bradyrhizobium (Soja)</option>
+                    <option value="azo" class="bg-slate-900">Azospirillum (Vegetativa)</option>
+                    <option value="trichoderma" class="bg-slate-900">Trichoderma (Fungo)</option>
+                    <option value="beauveria" class="bg-slate-900">Beauveria bassiana</option>
+                    <option value="micorrizas" class="bg-slate-900">Micorrizas (AMF)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-4 mb-4">
+
+            <div class="w-full lg:w-1/3 space-y-3">
+                <div class="glass-panel p-4 rounded-xl border-l-4 border-blue-500 transition-all hover:bg-white/5">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-[10px] font-bold text-blue-400 uppercase tracking-widest"><i
+                                class="fas fa-clock mr-1"></i> Tempo (Horas)</label>
+                        <span id="val-time"
+                            class="text-white font-mono text-sm font-bold bg-black/30 px-2 py-0.5 rounded">0h</span>
+                    </div>
+                    <input type="range" id="factor-time" min="0" max="24" value="0" step="1" class="w-full mb-1"
+                        oninput="updateSurvival()">
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border-l-4 border-orange-500 transition-all hover:bg-white/5">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-[10px] font-bold text-orange-400 uppercase tracking-widest"><i
+                                class="fas fa-thermometer-half mr-1"></i> Temp (°C)</label>
+                        <span id="val-temp"
+                            class="text-white font-mono text-sm font-bold bg-black/30 px-2 py-0.5 rounded">25°C</span>
+                    </div>
+                    <input type="range" id="factor-temp" min="20" max="50" value="25" step="1" class="w-full mb-1"
+                        oninput="updateSurvival()">
+                </div>
+
+                <div class="glass-panel p-4 rounded-xl border-l-4 border-red-500 transition-all hover:bg-white/5">
+                    <label class="block text-[10px] font-bold text-red-400 uppercase mb-2 tracking-widest"><i
+                            class="fas fa-flask mr-1"></i> Compatibilidade (TS)</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setChem(0, this)"
+                            class="chem-btn py-2 rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold hover:bg-emerald-500/20 transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]">Alta</button>
+                        <button onclick="setChem(1, this)"
+                            class="chem-btn py-2 rounded-lg border border-white/10 bg-white/5 text-gray-400 text-[10px] font-bold hover:bg-white/10 transition-all">Média</button>
+                        <button onclick="setChem(3, this)"
+                            class="chem-btn py-2 rounded-lg border border-white/10 bg-white/5 text-gray-400 text-[10px] font-bold hover:bg-white/10 transition-all">Tóxica</button>
+                    </div>
+                    <input type="hidden" id="factor-chem" value="0">
+                </div>
+            </div>
+
+            <div class="w-full lg:w-2/3 flex flex-col">
+                <div
+                    class="glass-panel p-4 rounded-[2rem] flex-grow relative overflow-hidden border border-white/10 flex flex-col items-center justify-center text-center shadow-xl min-h-[280px]">
+                    <div id="bg-glow"
+                        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-emerald-500/5 rounded-full blur-3xl transition-colors duration-700 pointer-events-none">
+                    </div>
+
+                    <div class="relative w-40 h-40 md:w-48 md:h-48 mb-4 z-10">
+                        <svg class="w-full h-full transform -rotate-90 drop-shadow-xl">
+                            <circle cx="50%" cy="50%" r="45%" stroke="rgba(255,255,255,0.05)" stroke-width="8"
+                                fill="transparent" />
+                            <circle id="survival-ring" cx="50%" cy="50%" r="45%" stroke="currentColor" stroke-width="8"
+                                fill="transparent" stroke-dasharray="816" stroke-dashoffset="0" stroke-linecap="round"
+                                class="text-bio-leaf transition-all duration-700 ease-out" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-[9px] text-gray-400 uppercase tracking-[0.1em] mb-1">População</span>
+                            <div class="flex items-baseline">
+                                <span
+                                    class="text-4xl md:text-5xl font-display font-bold text-white transition-all duration-300"
+                                    id="final-base">10</span>
+                                <span
+                                    class="text-2xl md:text-3xl font-display font-bold text-bio-leaf mb-4 transition-all duration-300"
+                                    id="final-exp">⁹</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="z-10 max-w-lg">
+                        <div id="viability-badge"
+                            class="inline-block px-3 py-0.5 rounded-full border border-white/10 bg-white/5 text-[10px] font-bold uppercase tracking-widest mb-2">
+                            Analisando...</div>
+                        <h3 id="survival-title"
+                            class="text-xl font-display font-bold text-white mb-1 transition-colors duration-300">
+                            Condição Ideal</h3>
+                        <p id="survival-desc" class="text-sm text-gray-400 leading-snug transition-all duration-300">A
+                            concentração bacteriana garante a colonização.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="dynamic-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
+        </div>
+
+    </section>
+
+    <script>
+        const orgData = {
+            bacillus: {
+                name: "Bacillus (Esporos)",
+                tempLimit: 45, chemResist: 0.8, timeDecay: 0.02,
+                desc: "Estruturas de resistência (endósporos) blindadas.",
+                tip: "Solubilização de Fósforo: Ideal para co-inoculação. Suplementar Manganês na indústria é vital.",
+                deathChem: "pH extremo inibiu germinação.", deathTemp: "Dormência induzida por calor.", deathTime: "Falta de umidade impede ativação."
+            },
+            brady: {
+                name: "Bradyrhizobium",
+                tempLimit: 32, chemResist: 0.3, timeDecay: 0.1,
+                desc: "Crescimento lento. Goma (EPS) ajuda sobrevivência.",
+                tip: "Atenção ao Cobalto/Molibdênio: Tóxicos por contato direto. Prefira no sulco.",
+                deathChem: "Lise celular por metais.", deathTemp: "Diversidade nos nódulos cai >32°C.", deathTime: "Dessecação rompeu a goma."
+            },
+            azo: {
+                name: "Azospirillum",
+                tempLimit: 30, chemResist: 0.1, timeDecay: 0.25,
+                desc: "Bactéria vegetativa muito frágil.",
+                tip: "Foco em AIA: Use no sulco para preservar a célula vegetativa.",
+                deathChem: "Lise de membrana imediata.", deathTemp: "Paralisia hormonal.", deathTime: "Morte rápida sem cistos."
+            },
+            trichoderma: {
+                name: "Trichoderma",
+                tempLimit: 32, chemResist: 0.0, timeDecay: 0.15,
+                desc: "Fungo antagonista vivo.",
+                tip: "Exclusão Competitiva: Aplique 7 dias longe de químicos.",
+                deathChem: "Fungicida atacou ergosterol.", deathTemp: "Inibição de micélio.", deathTime: "UV degradou conídios."
+            },
+            beauveria: {
+                name: "Beauveria bassiana",
+                tempLimit: 30, chemResist: 0.05, timeDecay: 0.2,
+                desc: "Entomopatogênico sensível.",
+                tip: "Fotoproteção: Aplique à tarde. UV degrada conídios.",
+                deathChem: "Incompatibilidade total.", deathTemp: "Perda de virulência >30°C.", deathTime: "Degradação fotolítica."
+            },
+            micorrizas: {
+                name: "Micorrizas (AMF)",
+                tempLimit: 35, chemResist: 0.2, timeDecay: 0.12,
+                desc: "Dependentes de raízes vivas.",
+                tip: "Evite fungicidas sistêmicos e revolvimento de solo.",
+                deathChem: "Inibição de colonização.", deathTemp: "Germinação parada >35°C.", deathTime: "Morte por inanição."
+            }
+        };
+
+        function setChem(val, btn) {
+            document.getElementById('factor-chem').value = val;
+            document.querySelectorAll('.chem-btn').forEach(b => {
+                b.className = 'chem-btn py-2 rounded-lg border border-white/10 bg-white/5 text-gray-400 text-[10px] font-bold hover:bg-white/10 transition-all';
+            });
+            btn.className = 'chem-btn py-2 rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold hover:bg-emerald-500/20 transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]';
+
+            if (val == 1) { // Média
+                btn.className = 'chem-btn py-2 rounded-lg border border-blue-500/50 bg-blue-500/10 text-blue-400 text-[10px] font-bold hover:bg-blue-500/20 transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]';
+            } else if (val == 3) { // Tóxica
+                btn.className = 'chem-btn py-2 rounded-lg border border-red-500/50 bg-red-500/10 text-red-400 text-[10px] font-bold hover:bg-red-500/20 transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)]';
+            }
+
+            updateSurvival();
+        }
+
+        function updateSurvival() {
+            const orgKey = document.getElementById('organism-select').value;
+            const org = orgData[orgKey];
+
+            const time = parseInt(document.getElementById('factor-time').value);
+            const temp = parseInt(document.getElementById('factor-temp').value);
+            const chem = parseInt(document.getElementById('factor-chem').value); // 0=Alta, 1=Média, 3=Tóxica
+
+            // Atualiza labels
+            document.getElementById('val-time').innerText = time + 'h';
+            document.getElementById('val-temp').innerText = temp + '°C';
+
+            // Modelo Cinético Simplificado: Log(N) = Log(N0) - k*t
+            // N0 = 10^9 UFC (LogN0 = 9)
+            let logN0 = 9;
+            let k = org.timeDecay; // Taxa base de decaimento
+
+            // Fator Temperatura
+            if (temp > org.tempLimit) {
+                // A cada grau acima do limite, aumenta o decaimento exponencialmente
+                let diff = temp - org.tempLimit;
+                k *= (1 + (diff * 0.5));
+            }
+
+            // Fator Químico
+            if (chem === 1) { // Média compatibilidade
+                k *= (1 + (1 - org.chemResist) * 5);
+            } else if (chem === 3) { // Tóxica
+                k *= 50; // Decaimento massivo
+            }
+
+            // Cálculo final
+            let logN = logN0 - (k * time);
+            if (logN < 0) logN = 0;
+
+            // Arredonda para 1 casa decimal para exibição
+            let displayExp = Math.floor(logN);
+            let mantissa = Math.pow(10, logN - displayExp).toFixed(1);
+
+            if (logN <= 0) {
+                mantissa = "0";
+                displayExp = 0;
+            }
+
+            // Atualiza UI Principal
+            document.getElementById('final-base').innerText = mantissa;
+            document.getElementById('final-exp').innerText = displayExp;
+
+            // Anel de Progresso (Stroke Dashoffset)
+            // 816 é o perímetro total. 0 = cheio, 816 = vazio.
+            // LogN vai de 0 a 9.
+            const maxLog = 9;
+            const percentage = logN / maxLog;
+            const offset = 816 - (816 * percentage);
+            document.getElementById('survival-ring').style.strokeDashoffset = offset;
+
+            // Cor do anel e status
+            const ring = document.getElementById('survival-ring');
+            const badge = document.getElementById('viability-badge');
+            const title = document.getElementById('survival-title');
+            const desc = document.getElementById('survival-desc');
+            const glow = document.getElementById('bg-glow');
+
+            // Lógica de Status
+            let status = "ideal"; // ideal, alert, critical
+            if (logN < 4) status = "critical";
+            else if (logN < 7) status = "alert";
+
+            if (status === "ideal") {
+                ring.classList.remove('text-orange-500', 'text-red-500');
+                ring.classList.add('text-bio-leaf');
+                badge.className = "inline-block px-3 py-0.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-2";
+                badge.innerText = "Viável";
+                title.innerText = "Alta Eficiência";
+                title.className = "text-xl font-display font-bold text-white mb-1";
+                desc.innerText = "População suficiente para garantir a colonização e os benefícios agronômicos.";
+                glow.className = "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-3xl transition-colors duration-700 pointer-events-none";
+            } else if (status === "alert") {
+                ring.classList.remove('text-bio-leaf', 'text-red-500');
+                ring.classList.add('text-orange-500');
+                badge.className = "inline-block px-3 py-0.5 rounded-full border border-orange-500/20 bg-orange-500/10 text-orange-400 text-[10px] font-bold uppercase tracking-widest mb-2";
+                badge.innerText = "Atenção";
+                title.innerText = "Perda de Vigor";
+                title.className = "text-xl font-display font-bold text-orange-50 text-opacity-90 mb-1";
+                desc.innerText = "Redução significativa. Aumente a dose ou melhore as condições de aplicação.";
+                glow.className = "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-orange-500/10 rounded-full blur-3xl transition-colors duration-700 pointer-events-none";
+            } else {
+                ring.classList.remove('text-bio-leaf', 'text-orange-500');
+                ring.classList.add('text-red-500');
+                badge.className = "inline-block px-3 py-0.5 rounded-full border border-red-500/20 bg-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-widest mb-2";
+                badge.innerText = "Inválido";
+                title.innerText = "Morte Celular";
+                title.className = "text-xl font-display font-bold text-red-50 text-opacity-90 mb-1";
+                desc.innerText = "População abaixo do limiar infectivo. Reinoculação obrigatória.";
+                glow.className = "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-3xl transition-colors duration-700 pointer-events-none";
+            }
+
+            // Cards Dinâmicos (Explicação dos Fatores)
+            const container = document.getElementById('dynamic-cards-container');
+            let html = '';
+
+            // Card Principal (Fator Limitante)
+            let factor = "none";
+            if (chem === 3) factor = "chem";
+            else if (temp > org.tempLimit + 5) factor = "temp";
+            else if (time > 12 && org.timeDecay > 0.1) factor = "time";
+
+            if (factor === 'chem') {
+                html += `<div class="glass-panel p-4 rounded-xl border-l-4 border-red-500 animate-fade-in"><div class="flex justify-between items-start mb-2"><div class="p-2 bg-red-500/20 rounded-lg text-red-400"><i class="fas fa-skull-crossbones text-lg"></i></div><span class="text-[9px] font-bold text-red-400 uppercase bg-red-500/10 px-2 py-0.5 rounded">Crítico</span></div><h4 class="text-base font-bold text-white mb-1">Incompatível</h4><p class="text-gray-400 text-xs leading-snug">${org.deathChem}</p></div>`;
+            } else if (factor === 'temp') {
+                html += `<div class="glass-panel p-4 rounded-xl border-l-4 border-orange-500 animate-fade-in"><div class="flex justify-between items-start mb-2"><div class="p-2 bg-orange-500/20 rounded-lg text-orange-400"><i class="fas fa-fire text-lg"></i></div><span class="text-[9px] font-bold text-orange-400 uppercase bg-orange-500/10 px-2 py-0.5 rounded">Térmico</span></div><h4 class="text-base font-bold text-white mb-1">Estresse</h4><p class="text-gray-400 text-xs leading-snug">${org.deathTemp}</p></div>`;
+            } else if (factor === 'time') {
+                html += `<div class="glass-panel p-4 rounded-xl border-l-4 border-blue-500 animate-fade-in"><div class="flex justify-between items-start mb-2"><div class="p-2 bg-blue-500/20 rounded-lg text-blue-400"><i class="fas fa-tint-slash text-lg"></i></div><span class="text-[9px] font-bold text-blue-400 uppercase bg-blue-500/10 px-2 py-0.5 rounded">Seca</span></div><h4 class="text-base font-bold text-white mb-1">Dessecação</h4><p class="text-gray-400 text-xs leading-snug">${org.deathTime}</p></div>`;
+            } else {
+                html += `<div class="glass-panel p-4 rounded-xl border-l-4 border-emerald-500 animate-fade-in"><div class="flex justify-between items-start mb-2"><div class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400"><i class="fas fa-check-circle text-lg"></i></div><span class="text-[9px] font-bold text-emerald-400 uppercase bg-emerald-500/10 px-2 py-0.5 rounded">OK</span></div><h4 class="text-base font-bold text-white mb-1">Potencial Máximo</h4><p class="text-gray-400 text-xs leading-snug">Condições ideais de expressão.</p></div>`;
+            }
+
+            let tipColor = "purple";
+            html += `<div class="glass-panel p-4 rounded-xl border-l-4 border-${tipColor}-500 hover:bg-white/5 transition-all"><div class="flex justify-between items-start mb-2"><div class="p-2 bg-${tipColor}-500/20 rounded-lg text-${tipColor}-400"><i class="fas fa-lightbulb text-lg"></i></div><span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest bg-black/30 px-2 py-0.5 rounded">Dica</span></div><h4 class="text-base font-bold text-white mb-1">Manejo</h4><p class="text-gray-400 text-xs leading-snug">${org.tip}</p></div>`;
+
+            container.innerHTML = html;
+
+            // NOVO: enviar proxy de stress para o Lab
+            if (window.parent && window.parent !== window) {
+                // Heurística simples de stress normalizado 0-1:
+                const timeStress = time / 24;
+                const tempStress = org && org.tempLimit
+                    ? Math.max(0, (temp - org.tempLimit + 5) / 15)
+                    : 0;
+                const chemStress = chem / 3;
+                let stressProxy = (timeStress + tempStress + chemStress) / 3;
+                if (stressProxy < 0) stressProxy = 0;
+                if (stressProxy > 1) stressProxy = 1;
+
+                window.parent.postMessage({
+                    type: 'simulatorChange',
+                    payload: {
+                        organismKey: orgKey,
+                        stressProxy: stressProxy
+                    }
+                }, '*');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { updateSurvival(); });
+
+        // Código para escutar o pai
+        window.addEventListener('message', (event) => {
+            const html = document.documentElement;
+
+            if (event.data === 'toggle-theme') {
+                html.classList.toggle('light-mode');
+                // Se usar tailwind com classe dark
+                if (html.classList.contains('light-mode')) {
+                    html.classList.remove('dark');
+                } else {
+                    html.classList.add('dark');
+                }
+                updateSurvival(); // Recalcula visuais se necessário
+            }
+
+            if (event.data === 'force-light') {
+                html.classList.add('light-mode');
+                html.classList.remove('dark');
+                updateSurvival();
+            }
+
+            // NOVO: receber seleção do Lab
+            if (event.data && typeof event.data === 'object' && event.data.type === 'labSelection') {
+                const payload = event.data.payload || {};
+                const orgKey = payload.organismKey;
+                const stress = typeof payload.stress === 'number' ? payload.stress : 0;
+
+                const select = document.getElementById('organism-select');
+                if (select && orgKey && Array.from(select.options).some(o => o.value === orgKey)) {
+                    select.value = orgKey;
+                }
+
+                // Heurística simples: usar o stress para ajustar tempo e temperatura
+                // (sem mudar o texto conceitual):
+                const timeSlider = document.getElementById('factor-time');
+                const tempSlider = document.getElementById('factor-temp');
+
+                if (timeSlider) {
+                    const min = parseInt(timeSlider.min);
+                    const max = parseInt(timeSlider.max);
+                    timeSlider.value = Math.round(min + (max - min) * stress);
+                }
+
+                if (tempSlider && orgKey && orgData[orgKey]) {
+                    const tempLimit = orgData[orgKey].tempLimit || 32;
+                    const base = tempLimit - 5;
+                    const span = 10;
+                    let target = base + span * stress;
+                    if (target < parseInt(tempSlider.min)) target = parseInt(tempSlider.min);
+                    if (target > parseInt(tempSlider.max)) target = parseInt(tempSlider.max);
+                    tempSlider.value = Math.round(target);
+                }
+
+                updateSurvival();
+            }
+        });
+    </script>
+</body>
+
+</html>
