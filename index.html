@@ -6,25 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>RizoWiki</title>
 
-    <!-- Tailwind CSS (offline) -->
-    <script src="lib/tailwindcss.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@300;500;700&display=swap"
+        rel="stylesheet">
 
-    <!-- Chart.js (offline) -->
-    <script src="lib/chart.umd.min.js"></script>
-
-    <!-- Lucide Icons (offline) -->
-    <script src="lib/lucide.min.js"></script>
-
-    <!-- Font Awesome (offline) -->
-    <link rel="stylesheet" href="css/all.min.css">
-
-    <!-- (Opcional) fontes locais – se tiver criado um fonts.css -->
-    <!-- <link rel="stylesheet" href="css/fonts.css"> -->
-
-    <!-- React + ReactDOM + Babel (offline) -->
-    <script src="lib/react.development.js"></script>
-    <script src="lib/react-dom.development.js"></script>
-    <script src="lib/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
 
@@ -915,7 +907,6 @@
         /* === SLIDER STYLES PARA O NOVO LABORATÓRIO === */
         input[type=range] {
             -webkit-appearance: none;
-            appearance: none;
             width: 100%;
             background: transparent;
         }
@@ -1416,21 +1407,19 @@
                         <h3 class="text-white font-bold text-2xl">O Paradoxo da Dose</h3>
                     </div>
                     <p class="text-gray-300 text-lg mb-8 leading-relaxed">
-                        Mais nem sempre é melhor. Inoculantes de soja exigem altas concentrações (10⁹ UFC) para vencer a
-                        microbiota nativa e ocupar os nódulos. Em contraste, PGPRs associativos (como Azospirillum)
-                        podem atingir saturação ou até supressão em doses excessivas, devido à competição por exsudatos
-                        ou desbalanço hormonal na rizosfera.
+                        Mais nem sempre é melhor. Inoculantes de soja exigem <strong>10<sup>9</sup> UFC</strong> para
+                        vencer a competição, enquanto *S. meliloti* em linhaça atinge eficácia máxima com
+                        <strong>10<sup>4</sup> UFC</strong> (doses maiores são supressoras).
                     </p>
                     <div class="flex justify-between bg-black/40 p-6 rounded-2xl border border-white/5">
                         <div class="text-center">
-                            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Soja (Nodulação)</div>
+                            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Soja</div>
                             <div class="text-bio-leaf font-bold text-3xl font-mono">10<sup>9</sup></div>
                         </div>
                         <div class="text-gray-600 font-bold text-xl self-center">vs</div>
                         <div class="text-center">
-                            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Associativos (Hormônios)
-                            </div>
-                            <div class="text-bio-purple font-bold text-3xl font-mono">Saturação</div>
+                            <div class="text-xs text-gray-500 uppercase tracking-widest mb-2">Linhaça</div>
+                            <div class="text-bio-purple font-bold text-3xl font-mono">10<sup>4</sup></div>
                         </div>
                     </div>
                 </div>
@@ -1482,19 +1471,17 @@
                         <h3 class="text-white font-bold text-2xl">Crise de Viabilidade</h3>
                     </div>
                     <p class="text-gray-300 text-lg mb-6 leading-relaxed">
-                        Na indústria, formulações líquidas de inoculantes costumam trabalhar na faixa de 10⁹–10¹⁰
-                        UFC/mL. Na semente ou no sulco, o objetivo é manter pelo menos 10⁶ UFC viáveis para garantir
-                        nodulação ou colonização eficiente.
+                        Bactérias fotossintéticas e não-esporulantes sofrem colapso rápido sem proteção osmótica
+                        (Turfa/Polímeros).
                     </p>
                     <div class="w-full bg-gray-800 h-4 rounded-full mt-8 mb-2 relative overflow-hidden">
                         <div class="absolute h-full bg-bio-leaf w-full"></div>
                         <div class="absolute h-full bg-bio-red w-[10%] shadow-[0_0_20px_rgba(239,68,68,0.8)] z-10">
                         </div>
                     </div>
-                    <div class="flex justify-between text-xs font-mono font-bold tracking-widest">
-                        <span class="text-xs font-bold text-emerald-600">Indústria: 10¹⁰</span>
-                        <span class="text-xs font-bold text-red-500">Campo: 10⁶</span>
-                    </div>
+                    <div class="flex justify-between text-xs font-mono font-bold tracking-widest"><span
+                            class="text-bio-leaf">10<sup>12</sup> (Indústria)</span><span
+                            class="text-bio-red">10<sup>4</sup> (Campo)</span></div>
                 </div>
             </div>
         </div>
@@ -1773,7 +1760,7 @@
                 id: 'nutrients',
                 title: 'Solubilização de Nutrientes',
                 type: 'Direto - Nutrição',
-                desc: 'Bactérias e fungos utilizam duas estratégias: 1) Solubilização Inorgânica: Acidificação da rizosfera via ácidos orgânicos (ex: ácido glucônico via PQQ-GDH) para dissolver P inorgânico; 2) Mineralização Orgânica: Hidrólise de P orgânico (como fitatos) via enzimas (fosfatases e fitases).',
+                desc: 'Microrganismos secretam ácidos orgânicos e fosfatases que solubilizam Fósforo (P) e Potássio (K) retidos no solo. Além disso, produzem sideróforos que quelam Ferro (Fe), tornando-o disponível para a planta e indisponível para patógenos.',
                 impact: 'Maior eficiência da adubação fosfatada em solos tropicais.',
                 icon: 'droplet', top: '85%', left: '70%', color: 'text-bio-accent', border: 'border-bio-accent', shadow: 'shadow-sky-500/50', bg: 'bg-bio-accent/10', borderCol: 'border-bio-accent'
             },
@@ -2121,8 +2108,9 @@
             const microbeNames = allMicrobes.map(m => m.name);
 
             compatibilityRules.forEach(rule => {
-                // CRITICAL FIX: Use .some() to check if ANY selected microbe matches the rule's agents (e.g. Fungicides)
-                const matches = rule.agents.some(agent => microbeNames.some(name => name.includes(agent)));
+                const matches = rule.agents.every(agent =>
+                    microbeNames.some(name => name.includes(agent))
+                );
 
                 if (matches) {
                     activeRules.push(rule);
@@ -2146,9 +2134,9 @@
                 activeRules.forEach(rule => {
                     if (rule.agents.some(a => m.name.includes(a))) {
                         // Override border if part of a synergy rule (or add secondary glow)
-                        // If already multi-function, we keep yellow border but add colored badge. 
-                        // If not, we use the synergy color for border.
                         if (rule.type === 'synergy') {
+                            // If already multi-function, we keep yellow border but add colored badge. 
+                            // If not, we use the synergy color for border.
                             if (!m.isSynergistic) {
                                 cardBorderClass = `border-${rule.color}-500 shadow-[0_0_15px_rgba(var(--color-${rule.color}-500),0.3)]`;
                                 cardBgClass = `bg-${rule.color}-500/5`;
@@ -2926,8 +2914,8 @@
         const data = [
             { id: 1, category: CATEGORIES.ECOLOGY, title: "1. Paradigma do Holobionte", icon: <Dna className="w-8 h-8 text-purple-600 dark:text-purple-400" />, shortDesc: "O 'Super-Organismo' Vegetal", color: "purple", position: { x: 50, y: 50 }, details: { concept: "Unidade Evolutiva (Hologenoma)", mechanism: "A planta não evolui sozinha. O genoma vegetal + metagenoma microbiano co-evoluem. Inclui a distinção entre ePGPR (extracelulares) e iPGPR (endofíticas).", molecular: "Rizodeposição & Exsudados: A planta investe até 30% do carbono fixado para criar um 'efeito rizosférico', secretando açúcares e flavonoides que recrutam o microbioma específico.", implication: "Mudar o foco de 'adubar a planta' para 'alimentar o holobionte'." } },
             { id: 2, category: CATEGORIES.NUTRITION, title: "2. Nitrogênio & Energia", icon: <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />, shortDesc: "Nitrogenase e Custo de ATP", color: "blue", position: { x: 20, y: 25 }, details: { concept: "Fixação Biológica de Nitrogênio (FBN)", mechanism: "A enzima Nitrogenase (genes nif) quebra a tripla ligação do N₂ atmosférico, transformando-o em NH₃.", molecular: "Engenharia Metabólica: O processo custa 16 ATPs por molécula de N₂. Bactérias modificadas redirecionam carbono para gerar mais ATP, maximizando a fixação.", implication: "Uso de hemoglobinas bacterianas para gerenciar o paradoxo do oxigênio." } },
-            { id: 3, category: CATEGORIES.NUTRITION, title: "3. Solubilização de Fósforo", icon: <Activity className="w-6 h-6 text-orange-600 dark:text-orange-400" />, shortDesc: "A via PQQ-GDH", color: "orange", position: { x: 80, y: 25 }, details: { concept: "Mineração de Fósforo", mechanism: "A mobilização de fósforo por microrganismos ocorre de duas formas complementares: (1) solubilização inorgânica, em que ácidos orgânicos (como o ácido glucônico derivado da enzima PQQ-GDH) acidificam a rizosfera e dissolvem fosfatos pouco solúveis; e (2) mineralização orgânica, em que enzimas como fosfatases e fitases quebram fitatos e outros compostos orgânicos, liberando fósforo para a planta.", molecular: "Mecanismo PQQ-GDH: A enzima Glucose Desidrogenase (cofator PQQ) oxida glucose em Ácido Glucônico. Este ácido atua como 'martelo químico'.", implication: "Inclui também mineralização de fitatos orgânicos via fitases." } },
-            { id: 4, category: CATEGORIES.BIOCONTROL, title: "4. Sideróforos: Arma Dupla", icon: <ShieldCheck className="w-6 h-6 text-red-600 dark:text-red-400" />, shortDesc: "Nutrição + Biocontrole", color: "red", position: { x: 20, y: 75 }, details: { concept: "A Guerra pelo Ferro", mechanism: "Sideróforos são quelantes de alta afinidade que 'roubam' ferro do ambiente.", molecular: "Efeito Duplo: 1) Nutrem a planta (que absorve o complexo Fe-Sideróforo). 2) Matam patógenos por inanição ('fome de ferro').", implication: "Podem ampliar a resistência da planta a diferentes agentes bióticos (fungos, bactérias), via indução de defesas e competição por ferro." } },
+            { id: 3, category: CATEGORIES.NUTRITION, title: "3. Solubilização de Fósforo", icon: <Activity className="w-6 h-6 text-orange-600 dark:text-orange-400" />, shortDesc: "A via PQQ-GDH", color: "orange", position: { x: 80, y: 25 }, details: { concept: "Mineração de Fósforo", mechanism: "Bactérias acidificam a rizosfera para dissolver fosfatos de cálcio/ferro insolúveis.", molecular: "Mecanismo PQQ-GDH: A enzima Glucose Desidrogenase (cofator PQQ) oxida glucose em Ácido Glucônico. Este ácido atua como 'martelo químico'.", implication: "Inclui também mineralização de fitatos orgânicos via fitases." } },
+            { id: 4, category: CATEGORIES.BIOCONTROL, title: "4. Sideróforos: Arma Dupla", icon: <ShieldCheck className="w-6 h-6 text-red-600 dark:text-red-400" />, shortDesc: "Nutrição + Biocontrole", color: "red", position: { x: 20, y: 75 }, details: { concept: "A Guerra pelo Ferro", mechanism: "Sideróforos são quelantes de alta afinidade que 'roubam' ferro do ambiente.", molecular: "Efeito Duplo: 1) Nutrem a planta (que absorve o complexo Fe-Sideróforo). 2) Matam patógenos por inanição ('fome de ferro').", implication: "Biofungicida natural baseado em privação de recursos." } },
             { id: 5, category: CATEGORIES.ECOLOGY, title: "5. Ajuste Fino Hormonal", icon: <Sprout className="w-6 h-6 text-green-600 dark:text-green-500" />, shortDesc: "IAA e Arquitetura Radicular", color: "green", position: { x: 80, y: 75 }, details: { concept: "Fitostimulação (Auxinas)", mechanism: "Bactérias convertem triptofano exsudado pela raiz em Ácido Indol-3-Acético (IAA).", molecular: "Equilíbrio Delicado: Doses ótimas de IAA bacteriano aumentam pêlos radiculares e raízes laterais. Doses excessivas inibem o crescimento.", implication: "Maximização da área superficial da raiz para absorção de água/nutrientes." } },
             { id: 6, category: CATEGORIES.STRESS, title: "6. ACC Desaminase", icon: <Activity className="w-6 h-6 text-pink-600 dark:text-pink-400" />, shortDesc: "O 'Freio' do Estresse", color: "pink", position: { x: 50, y: 15 }, details: { concept: "Alívio do Estresse de Etileno", mechanism: "Sob estresse (seca/sal), a planta produz etileno excessivo que trava o crescimento da raiz.", molecular: "Enzima ACC Desaminase (acdS): A bactéria 'come' o precursor do etileno (ACC) exsudado pela raiz, baixando os níveis internos de etileno.", implication: "A arma mais poderosa para manter crescimento em solos salinos ou alagados." } },
             { id: 7, category: CATEGORIES.STRESS, title: "7. Trehalose & Seca", icon: <Droplets className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />, shortDesc: "Osmoproteção Molecular", color: "cyan", position: { x: 50, y: 85 }, details: { concept: "Resistência à Dessecação", mechanism: "A Trehalose é um açúcar que substitui a água nas células, prevenindo colapso de membranas ('vitrificação').", molecular: "Sinalização ABA: A trehalose bacteriana também induz a planta a produzir Ácido Abscísico (ABA), fechando estômatos.", implication: "Tecnologia vital para agricultura em climas semi-áridos." } },

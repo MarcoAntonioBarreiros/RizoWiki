@@ -8,7 +8,7 @@ window.solverData = [
         "gradient": "from-green-600 to-emerald-800",
         "mech": {
             "title": "Substituição via FBN",
-            "desc": "Bactérias diazotróficas convertem N₂ atmosférico em amônia. Em leguminosas, permite a substituição total do N mineral. Em gramíneas, aumenta a eficiência do uso de N e permite redução parcial da adubação.",
+            "desc": "Bactérias diazotróficas convertem N₂ atmosférico em amônia, permitindo reduzir ou eliminar a adubação nitrogenada mineral em leguminosas e gramíneas.",
             "molecule": "Nitrogenase / Amônia",
             "action": "Fixação Biológica"
         },
@@ -52,7 +52,7 @@ window.solverData = [
             "5. Avaliar: Contar nódulos (soja) ou biomassa de raiz (milho) em V4."
         ],
         "recs": [
-            { "type": "critical", "title": "Fotossensibilidade", "text": "Azospirillum é sensível ao ressecamento e luz solar. Mantenha sementes tratadas à sombra e plante rapidamente." },
+            { "type": "critical", "title": "Fotossensibilidade", "text": "Azospirillum morre com luz UV direta em 20 min. Cubra a semente rapidamente." },
             { "type": "strategy", "title": "Co-Inoculação", "text": "A soma de FBN + Estímulo Radicular supera o uso isolado." }
         ]
     },
@@ -99,7 +99,7 @@ window.solverData = [
             "1. Escolher estirpes validadas para o tipo de solo (ácido vs alcalino).",
             "2. Dose: 100-150mL/ha no sulco de plantio.",
             "3. Momento: Aplicar junto com o fertilizante fosfatado ou na semente.",
-            "4. Compatibilidade: Variável. Bactérias (Bacillus/Pseudomonas) têm boa tolerância. No entanto, componentes fúngicos (Micorrizas) são sensíveis a muitos fungicidas (ex: triazóis, estrobilurinas); verificar tabelas.",
+            "4. Compatibilidade: Alta com a maioria dos fungicidas, mas evite cobre.",
             "5. Avaliar: Análise foliar de P e desenvolvimento radicular."
         ],
         "recs": [
@@ -116,8 +116,8 @@ window.solverData = [
         "gradient": "from-orange-500 to-red-700",
         "mech": {
             "title": "Osmoproteção & Raízes Profundas",
-            "desc": "Indução de raízes profundas (AIA) e produção de osmoprotetores (trehalose, prolina) que mantêm a turgidez celular.",
-            "molecule": "Trehalose / Prolina",
+            "desc": "Indução de raízes mais profundas para buscar água e produção de solutos (trehalose) que protegem a célula da desidratação.",
+            "molecule": "Trehalose / Biofilme",
             "action": "Mitigação de Estresse"
         },
         "microbes": [
@@ -138,12 +138,6 @@ window.solverData = [
                 "strain": "palustris",
                 "specs": { "type": "Antioxidante", "temp": "Solo" },
                 "desc": "Produz 5-ALA, combatendo o estresse oxidativo (radicais livres) gerado pela seca."
-            },
-            {
-                "name": "Azospirillum brasilense",
-                "strain": "Ab-V5 / Ab-V6",
-                "specs": { "type": "Bactéria", "temp": "Semente/Sulco" },
-                "desc": "Aumenta o volume radicular, permitindo acesso a água em camadas mais profundas do solo."
             },
             {
                 "name": "Glomus spp.",
@@ -194,14 +188,14 @@ window.solverData = [
                 "name": "Pseudomonas putida",
                 "strain": "Sideróforo+",
                 "specs": { "type": "Competição", "temp": "Solo" },
-                "desc": "Produz sideróforos que quelam ferro, limitando a disponibilidade para patógenos (competição) e induz resistência sistêmica."
+                "desc": "Sequestra todo o ferro disponível via sideróforos, matando patógenos de fome (inanição)."
             }
         ],
         "protocolSummary": [
             "1. Monitorar histórico de doenças da área.",
             "2. Dose: Aumentar em 50% em áreas de alta pressão.",
             "3. Momento: Tratamento de sementes ou sulco (chegar antes do patógeno).",
-            "4. Compatibilidade: Alta sensibilidade de Trichoderma a fungicidas. Evitar mistura direta no tanque sem validação prévia; priorizar aplicação separada ou consultar tabelas.",
+            "4. Compatibilidade: NUNCA misturar Trichoderma com fungicidas no tanque.",
             "5. Avaliar: Stand de plantas e sanidade de raízes."
         ],
         "recs": [
@@ -236,10 +230,10 @@ window.solverData = [
                 "desc": "Além de proteger, solubiliza nutrientes e produz auxinas que aceleram a germinação."
             },
             {
-                "name": "Bacillus subtilis",
-                "strain": "Promoção",
-                "specs": { "type": "Biofilme", "temp": "Semente" },
-                "desc": "Protege a plântula contra estresses iniciais e estimula o vigor."
+                "name": "Extratos de Algas",
+                "strain": "Ascophyllum",
+                "specs": { "type": "Bioestimulante", "temp": "Semente" },
+                "desc": "Sinergia: Fornece precursores hormonais que as bactérias utilizam."
             }
         ],
         "protocolSummary": [
@@ -251,7 +245,7 @@ window.solverData = [
         ],
         "recs": [
             { "type": "critical", "title": "Luz UV", "text": "Proteger sementes tratadas do sol." },
-            { "type": "strategy", "title": "Combo", "text": "Associar com micronutrientes (Co, Mo) no TS é essencial para a FBN, mas cuidado com a salinidade/pH." }
+            { "type": "strategy", "title": "Combo", "text": "Associar com micronutrientes (Co, Mo, Zn) no TS." }
         ]
     },
     {
@@ -269,12 +263,6 @@ window.solverData = [
         },
         "microbes": [
             {
-                "name": "Bacillus thuringiensis (Bt)",
-                "strain": "Diversas (ex: kurstaki)",
-                "specs": { "type": "Bactéria", "temp": "Foliar" },
-                "desc": "Produz cristais de proteína (Cry) tóxicos para lagartas (Lepidoptera) após ingestão. Base do controle biológico moderno."
-            },
-            {
                 "name": "Chromobacterium",
                 "strain": "subtsugae",
                 "specs": { "type": "Repelência", "temp": "Foliar" },
@@ -287,10 +275,10 @@ window.solverData = [
                 "desc": "O esporo germina na casca do inseto e coloniza o interior (mumificação). Alvo: Broca/Cigarrinha."
             },
             {
-                "name": "Saccharopolyspora spinosa",
-                "strain": "Metabólitos",
-                "specs": { "type": "Bactéria (Derivado)", "temp": "Foliar" },
-                "desc": "Ação rápida (choque) contra lagartas e trips. (Nota: Utiliza-se o metabólito Spinosad, não a bactéria viva)."
+                "name": "Saccharopolyspora",
+                "strain": "spinosa",
+                "specs": { "type": "Neurotoxina", "temp": "Foliar" },
+                "desc": "Ação rápida (choque) contra lagartas (Spodoptera) e trips."
             }
         ],
         "protocolSummary": [
@@ -336,12 +324,6 @@ window.solverData = [
                 "strain": "Micorrizas",
                 "specs": { "type": "Físico", "temp": "Raiz" },
                 "desc": "A glomalina produzida ajuda a estabilizar agregados do solo a longo prazo."
-            },
-            {
-                "name": "Azospirillum brasilense",
-                "strain": "Ab-V5 / Ab-V6",
-                "specs": { "type": "Arquitetura", "temp": "Semente/Sulco" },
-                "desc": "Estimula raízes finas que ajudam a explorar poros menores em solos compactados."
             }
         ],
         "protocolSummary": [
