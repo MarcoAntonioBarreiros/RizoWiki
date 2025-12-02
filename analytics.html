@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BioHub Analytics - Dashboard Final</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script src="lib/tailwindcss.min.js"></script>
+    <script src="lib/d3.v7.min.js"></script>
+    <script src="lib/d3-sankey.min.js"></script>
+
+    <link rel="stylesheet" href="css/all.min.css">
+    <!-- opcional: <link rel="stylesheet" href="css/fonts.css"> -->
 
     <script>
         tailwind.config = {
@@ -39,24 +40,60 @@
 
     <style>
         /* ESTILOS BASE */
-        body { background-color: #050816; color: #cbd5e1; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
-        
+        body {
+            background-color: #050816;
+            color: #cbd5e1;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
         /* ESTILOS LIGHT MODE */
-        html.light-mode body { background-color: #f1f5f9; color: #334155; }
-        
+        html.light-mode body {
+            background-color: #f1f5f9;
+            color: #334155;
+        }
+
         /* Barra e Painéis no Light Mode */
-        html.light-mode .glass-bar { background: rgba(255, 255, 255, 0.95) !important; border-bottom: 1px solid #e2e8f0 !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important; }
-        html.light-mode .glass-panel { background: #ffffff !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05) !important; }
-        
+        html.light-mode .glass-bar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        html.light-mode .glass-panel {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+        }
+
         /* Ajuste da Caixa de Status no Light Mode */
-        html.light-mode #sankey-status { background-color: #f8fafc !important; border-left-width: 4px !important; border-color: #e2e8f0 !important; }
-        html.light-mode #sankey-status-desc { color: #64748b !important; }
-        html.light-mode #sankey-icon-box { background-color: #e2e8f0 !important; color: #475569 !important; }
+        html.light-mode #sankey-status {
+            background-color: #f8fafc !important;
+            border-left-width: 4px !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        html.light-mode #sankey-status-desc {
+            color: #64748b !important;
+        }
+
+        html.light-mode #sankey-icon-box {
+            background-color: #e2e8f0 !important;
+            color: #475569 !important;
+        }
 
         /* Textos no Light Mode */
-        html.light-mode h3, html.light-mode h4, html.light-mode strong { color: #0f172a !important; }
-        html.light-mode p, html.light-mode .text-gray-400 { color: #475569 !important; }
-        
+        html.light-mode h3,
+        html.light-mode h4,
+        html.light-mode strong {
+            color: #0f172a !important;
+        }
+
+        html.light-mode p,
+        html.light-mode .text-gray-400 {
+            color: #475569 !important;
+        }
+
         /* ESTILOS DARK MODE (PADRÃO) */
         .glass-bar {
             background: rgba(15, 23, 42, 0.95);
@@ -64,19 +101,29 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
         }
+
         .glass-panel {
             background: rgba(15, 23, 42, 0.4);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
         }
-        
+
         .d3-tooltip {
-            position: absolute; text-align: left; padding: 8px 12px;
-            background: rgba(0, 0, 0, 0.95); border: 1px solid #334155;
-            border-radius: 6px; pointer-events: none; color: #fff;
-            font-size: 11px; font-weight: 600; opacity: 0; transition: opacity 0.1s;
-            z-index: 1000; white-space: nowrap;
+            position: absolute;
+            text-align: left;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid #334155;
+            border-radius: 6px;
+            pointer-events: none;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.1s;
+            z-index: 1000;
+            white-space: nowrap;
         }
 
         /* Scrollbar Personalizada para Containers */
@@ -86,28 +133,44 @@
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
         }
-        .scroll-container::-webkit-scrollbar { height: 6px; }
-        .scroll-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
-        .scroll-container::-webkit-scrollbar-thumb { background: rgba(150,150,150,0.3); border-radius: 10px; }
+
+        .scroll-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: rgba(150, 150, 150, 0.3);
+            border-radius: 10px;
+        }
     </style>
 </head>
+
 <body class="antialiased">
 
     <div class="sticky top-0 z-50 glass-bar w-full py-4 px-6 transition-all duration-300" id="info-bar">
         <div class="container mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
             <div class="flex items-center gap-5 w-full md:w-1/3 border-r border-gray-500/20 pr-6">
-                <div class="p-3 bg-bio-accent/10 rounded-xl border border-bio-accent/20 text-bio-accent text-2xl shadow-[0_0_15px_rgba(14,165,233,0.2)]" id="bar-icon">
+                <div class="p-3 bg-bio-accent/10 rounded-xl border border-bio-accent/20 text-bio-accent text-2xl shadow-[0_0_15px_rgba(14,165,233,0.2)]"
+                    id="bar-icon">
                     <i class="fas fa-database"></i>
                 </div>
                 <div>
-                    <h4 id="bar-title" class="text-white font-display font-bold text-lg uppercase tracking-tight leading-none mb-1">BioHub Analytics</h4>
+                    <h4 id="bar-title"
+                        class="text-white font-display font-bold text-lg uppercase tracking-tight leading-none mb-1">
+                        BioHub Analytics</h4>
                     <div class="flex items-center gap-2">
-                        <span class="text-bio-accent font-bold text-xs uppercase tracking-widest" id="bar-subtitle">MATRIZ DE RESILIÊNCIA</span>
+                        <span class="text-bio-accent font-bold text-xs uppercase tracking-widest"
+                            id="bar-subtitle">MATRIZ DE RESILIÊNCIA</span>
                     </div>
                 </div>
             </div>
             <div class="w-full md:w-2/3">
-                <p id="bar-desc" class="text-gray-400 text-sm md:text-base leading-relaxed font-light transition-all duration-300">
+                <p id="bar-desc"
+                    class="text-gray-400 text-sm md:text-base leading-relaxed font-light transition-all duration-300">
                     Interaja com a Matriz abaixo para ver detalhes moleculares. Role para baixo para ver o Fluxo Lógico.
                 </p>
             </div>
@@ -115,22 +178,28 @@
     </div>
 
     <section class="min-h-screen py-8 relative">
-        <div class="absolute top-0 left-1/4 w-[1000px] h-[500px] bg-bio-accent/5 rounded-full blur-[120px] pointer-events-none mix-blend-screen"></div>
+        <div
+            class="absolute top-0 left-1/4 w-[1000px] h-[500px] bg-bio-accent/5 rounded-full blur-[120px] pointer-events-none mix-blend-screen">
+        </div>
 
         <div class="container mx-auto px-4 md:px-8 relative z-10 flex flex-col gap-8">
-            
+
             <div class="glass-panel rounded-2xl p-4 animate-fade-in-up">
                 <div class="flex justify-between items-center mb-1 border-b border-gray-500/20 pb-2 px-2">
                     <h3 class="text-white font-bold text-lg flex items-center gap-2 font-display">
                         <i class="fas fa-th text-bio-purple"></i> Matriz de Resiliência
                     </h3>
                     <div class="flex gap-4 text-[9px] uppercase tracking-widest text-gray-400 font-bold hidden md:flex">
-                        <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-bio-red"></span> Colapso</div>
-                        <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-bio-gold"></span> Estresse</div>
-                        <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-bio-leaf shadow-[0_0_6px_#22c55e]"></span> Ótimo</div>
+                        <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-bio-red"></span>
+                            Colapso</div>
+                        <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-bio-gold"></span>
+                            Estresse</div>
+                        <div class="flex items-center gap-1"><span
+                                class="w-2 h-2 rounded-full bg-bio-leaf shadow-[0_0_6px_#22c55e]"></span> Ótimo</div>
                     </div>
                 </div>
-                <div class="text-[10px] text-gray-500 md:hidden mb-2 text-center italic">Arraste para o lado para ver toda a tabela &rarr;</div>
+                <div class="text-[10px] text-gray-500 md:hidden mb-2 text-center italic">Arraste para o lado para ver
+                    toda a tabela &rarr;</div>
                 <div class="w-full h-[420px] scroll-container" id="heatmap-wrapper">
                     <div id="heatmap-container"></div>
                 </div>
@@ -141,15 +210,19 @@
                     <h3 class="text-white font-bold text-lg flex items-center gap-2 font-display">
                         <i class="fas fa-random text-bio-leaf"></i> Fluxo de Solução
                     </h3>
-                    <span class="text-[10px] text-gray-500 font-mono bg-white/5 border border-white/10 px-2 py-1 rounded">INPUT &rarr; BIO &rarr; OUTPUT</span>
+                    <span
+                        class="text-[10px] text-gray-500 font-mono bg-white/5 border border-white/10 px-2 py-1 rounded">INPUT
+                        &rarr; BIO &rarr; OUTPUT</span>
                 </div>
 
-                <div id="sankey-status" class="mb-4 p-4 rounded-xl bg-black/20 border-l-4 border-bio-leaf flex items-start gap-4 transition-all duration-300 min-h-[80px]">
+                <div id="sankey-status"
+                    class="mb-4 p-4 rounded-xl bg-black/20 border-l-4 border-bio-leaf flex items-start gap-4 transition-all duration-300 min-h-[80px]">
                     <div class="p-2 bg-white/5 rounded-lg text-gray-400 shrink-0" id="sankey-icon-box">
                         <i class="fas fa-mouse-pointer text-xl"></i>
                     </div>
                     <div>
-                        <h4 id="sankey-status-title" class="text-white font-bold text-sm uppercase tracking-wide mb-1">Interaja com o Diagrama</h4>
+                        <h4 id="sankey-status-title" class="text-white font-bold text-sm uppercase tracking-wide mb-1">
+                            Interaja com o Diagrama</h4>
                         <p id="sankey-status-desc" class="text-gray-400 text-sm leading-snug">
                             Passe o mouse sobre os nós ou conexões para visualizar o mecanismo de ação específico.
                         </p>
@@ -166,7 +239,7 @@
         // ======================================================
         // 1. DADOS (DATA)
         // ======================================================
-        
+
         const heatmapData = [
             { row: "BACILLUS", col: "ALTA TEMP (>45°C)", val: 9, mech: "Esporulação", desc: "Endósporos termoestáveis permitem sobrevivência acima de 45°C sem perda de viabilidade." },
             { row: "BACILLUS", col: "SECA SEVERA", val: 9, mech: "Dormência", desc: "Entra em estado de dormência metabólica total via esporulação." },
@@ -214,7 +287,7 @@
         ];
 
         const logicFlows = [
-            { input: "s1", agent: "a1", output: "o1", desc: "Bacillus produz Biofilme/EPS para agregar o solo." }, 
+            { input: "s1", agent: "a1", output: "o1", desc: "Bacillus produz Biofilme/EPS para agregar o solo." },
             { input: "s1", agent: "a5", output: "o1", desc: "Azospirillum produz EPS nas raízes para microambientes." },
             { input: "s2", agent: "a2", output: "o2", desc: "Pseudomonas produz ácido glucônico massivo para solubilização." },
             { input: "s2", agent: "a1", output: "o2", desc: "Bacillus solubiliza fosfatos via PQQ-GDH." },
@@ -234,13 +307,13 @@
             { id: "s3", name: "Patógenos", col: 0, color: "#d946ef" },
             { id: "s4", name: "Deficiência N", col: 0, color: "#eab308" },
             { id: "s5", name: "Salinidade/Seca", col: 0, color: "#ef4444" },
-            
+
             { id: "a1", name: "Bacillus", col: 1, color: "#0ea5e9" },
             { id: "a2", name: "Pseudomonas", col: 1, color: "#8b5cf6" },
             { id: "a3", name: "Trichoderma", col: 1, color: "#fbbf24" },
             { id: "a4", name: "Bradyrhizobium", col: 1, color: "#22c55e" },
             { id: "a5", name: "Azospirillum", col: 1, color: "#10b981" },
-            
+
             { id: "o1", name: "Biofilme (EPS)", col: 2, color: "#64748b" },
             { id: "o2", name: "Solubilização", col: 2, color: "#f97316" },
             { id: "o3", name: "Antibiose", col: 2, color: "#d946ef" },
@@ -252,19 +325,19 @@
         // ======================================================
         // 2. FUNÇÕES UI
         // ======================================================
-        
+
         function updateInfoBar(title, desc, color, iconClass) {
             document.getElementById("bar-title").innerText = title;
             document.getElementById("bar-title").style.color = color;
             document.getElementById("bar-subtitle").innerText = "Detalhe Bioquímico";
             document.getElementById("bar-subtitle").style.color = color;
             document.getElementById("bar-desc").innerHTML = desc;
-            
+
             const iconContainer = document.getElementById("bar-icon");
             iconContainer.innerHTML = `<i class="${iconClass}"></i>`;
             iconContainer.style.color = color;
             iconContainer.style.borderColor = color;
-            iconContainer.style.backgroundColor = color + '1A'; 
+            iconContainer.style.backgroundColor = color + '1A';
         }
 
         function updateSankeyInfo(title, desc, color, iconClass) {
@@ -273,7 +346,7 @@
             const descEl = document.getElementById("sankey-status-desc");
             const iconBox = document.getElementById("sankey-icon-box");
 
-            if(document.documentElement.classList.contains('light-mode')) {
+            if (document.documentElement.classList.contains('light-mode')) {
                 box.style.borderLeftColor = color;
             } else {
                 box.style.borderLeftColor = color;
@@ -299,9 +372,9 @@
         function renderHeatmap() {
             const wrapper = document.getElementById("heatmap-wrapper");
             const container = document.getElementById("heatmap-container");
-            if(!container || !wrapper) return;
+            if (!container || !wrapper) return;
             container.innerHTML = "";
-            
+
             const isLight = document.documentElement.classList.contains('light-mode');
             const textColor = isLight ? '#1e293b' : '#fff';
             const axisColor = isLight ? '#64748b' : '#94a3b8';
@@ -310,11 +383,11 @@
             const isMobile = window.innerWidth < 768;
             let computedWidth = wrapper.clientWidth || window.innerWidth - 40;
             const minWidth = isMobile ? 600 : computedWidth;
-            
+
             const margin = { top: 120, right: 20, bottom: 20, left: 140 };
             const width = minWidth - margin.left - margin.right;
             const height = (wrapper.clientHeight || 420) - margin.top - margin.bottom;
-            
+
             const svg = d3.select("#heatmap-container").append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
@@ -327,9 +400,9 @@
             const y = d3.scaleBand().range([0, height]).domain(rows).padding(0.2);
 
             svg.selectAll("path.grid").data(cols).enter().append("line")
-               .attr("x1", d => x(d) + x.bandwidth()/2).attr("x2", d => x(d) + x.bandwidth()/2)
-               .attr("y1", 0).attr("y2", height)
-               .attr("stroke", gridColor).attr("stroke-width", 1).attr("stroke-dasharray", "3,3");
+                .attr("x1", d => x(d) + x.bandwidth() / 2).attr("x2", d => x(d) + x.bandwidth() / 2)
+                .attr("y1", 0).attr("y2", height)
+                .attr("stroke", gridColor).attr("stroke-width", 1).attr("stroke-dasharray", "3,3");
 
             const yAxis = svg.append("g").attr("class", "y-axis").call(d3.axisLeft(y).tickSize(0));
             yAxis.select(".domain").remove();
@@ -343,18 +416,18 @@
 
             svg.selectAll()
                 .data(heatmapData).enter().append("circle")
-                .attr("cx", d => x(d.col) + x.bandwidth()/2)
-                .attr("cy", d => y(d.row) + y.bandwidth()/2)
+                .attr("cx", d => x(d.col) + x.bandwidth() / 2)
+                .attr("cy", d => y(d.row) + y.bandwidth() / 2)
                 .attr("r", 0)
                 .style("fill", d => colorScale(d.val)).style("fill-opacity", 0.8)
                 .style("stroke", d => colorScale(d.val)).style("stroke-width", 1)
                 .style("cursor", "pointer")
-                .on("mouseover", function(event, d) {
-                    d3.select(this).transition().duration(150).attr("r", Math.min(x.bandwidth(), y.bandwidth())/1.5).style("fill-opacity", 1).style("stroke", textColor).style("stroke-width", 2);
+                .on("mouseover", function (event, d) {
+                    d3.select(this).transition().duration(150).attr("r", Math.min(x.bandwidth(), y.bandwidth()) / 1.5).style("fill-opacity", 1).style("stroke", textColor).style("stroke-width", 2);
                     updateInfoBar(`${d.row} vs ${d.col}`, d.desc, colorScale(d.val), "fas fa-microscope");
                     showTooltip(event, `Score: ${d.val}/10 • ${d.mech}`);
                 })
-                .on("mouseout", function(event, d) {
+                .on("mouseout", function (event, d) {
                     d3.select(this).transition().duration(250).attr("r", d.val * 1.3 + 3).style("fill-opacity", 0.8).style("stroke-width", 1).style("stroke", d => colorScale(d.val));
                     hideTooltip();
                 })
@@ -366,14 +439,14 @@
         // ======================================================
         function renderManualSankey() {
             const container = document.getElementById("sankey-container");
-            if(!container) return;
+            if (!container) return;
             container.innerHTML = "";
-            
+
             // Threshold para Mobile (Vertical) - GARANTE O VERTICAL NO CELULAR
-            const isMobile = window.innerWidth < 1024; 
-            
+            const isMobile = window.innerWidth < 1024;
+
             const width = container.clientWidth || window.innerWidth - 40;
-            const height = isMobile ? 800 : 500; 
+            const height = isMobile ? 800 : 500;
             container.style.height = height + "px";
 
             const isLight = document.documentElement.classList.contains('light-mode');
@@ -384,11 +457,11 @@
 
             const cols = [[], [], []];
             sankeyNodesDef.forEach(n => cols[n.col].push(n));
-            
+
             // CORRIGIDO AQUI: Margem 140px no Desktop para não cortar o texto
-            const paddingMain = isMobile ? 60 : 140; 
+            const paddingMain = isMobile ? 60 : 140;
             const laneSize = isMobile ? height : width;
-            const lanePositions = [paddingMain, laneSize/2, laneSize - paddingMain];
+            const lanePositions = [paddingMain, laneSize / 2, laneSize - paddingMain];
 
             cols.forEach((nodesInGroup, groupIndex) => {
                 const crossSize = isMobile ? width : height;
@@ -470,9 +543,9 @@
             }
 
             // Interatividade
-            linkSelection.on("mouseover", function(e, d) { highlightFlow(d.flowId, d.desc, d.color); }).on("mouseout", resetHighlight);
-            nodeSelection.on("mouseover", function(e, d) {
-                const flowsInvolved = logicFlows.map((flow, idx) => ({...flow, id: idx})).filter(flow => flow.input === d.id || flow.agent === d.id || flow.output === d.id);
+            linkSelection.on("mouseover", function (e, d) { highlightFlow(d.flowId, d.desc, d.color); }).on("mouseout", resetHighlight);
+            nodeSelection.on("mouseover", function (e, d) {
+                const flowsInvolved = logicFlows.map((flow, idx) => ({ ...flow, id: idx })).filter(flow => flow.input === d.id || flow.agent === d.id || flow.output === d.id);
                 const activeFlowIds = flowsInvolved.map(f => f.id);
                 linkSelection.attr("stroke-opacity", l => activeFlowIds.includes(l.flowId) ? 0.8 : 0.05).attr("stroke-width", l => activeFlowIds.includes(l.flowId) ? l.width + 3 : l.width);
                 let descText = d.col === 0 ? `Problema Inicial. Afeta ${flowsInvolved.length} vias biológicas.` : (d.col === 1 ? `Agente Central.` : `Mecanismo Resultante.`);
@@ -499,10 +572,10 @@
 
             if (event.data === 'toggle-theme') {
                 html.classList.toggle('light-mode');
-                if(html.classList.contains('light-mode')) { html.classList.remove('dark'); } else { html.classList.add('dark'); }
+                if (html.classList.contains('light-mode')) { html.classList.remove('dark'); } else { html.classList.add('dark'); }
                 shouldRender = true;
             }
-            
+
             if (event.data === 'force-light') {
                 if (!html.classList.contains('light-mode')) {
                     html.classList.add('light-mode');
@@ -522,11 +595,12 @@
                 if (window.parent && window.parent.document.documentElement.classList.contains('light-mode')) {
                     document.documentElement.classList.add('light-mode');
                 }
-            } catch(e) {}
+            } catch (e) { }
             setTimeout(() => { renderHeatmap(); renderManualSankey(); }, 300);
         });
-        
+
         window.addEventListener("resize", () => { renderHeatmap(); renderManualSankey(); });
     </script>
 </body>
+
 </html>

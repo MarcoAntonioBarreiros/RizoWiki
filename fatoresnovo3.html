@@ -1,161 +1,133 @@
-<!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+font-family: 'Inter', sans-serif;
+overflow-x: hidden;
+}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Viabilidade de Inoculantes</title>
+/* Painéis mais compactos */
+.glass-panel {
+background: rgba(15, 23, 42, 0.85);
+backdrop-filter: blur(20px);
+border: 1px solid rgba(255, 255, 255, 0.08);
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@300;500;700&display=swap"
-        rel="stylesheet">
+input[type=range] {
+-webkit-appearance: none;
+background: transparent;
+}
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Space Grotesk', 'sans-serif'] },
-                    colors: {
-                        bio: { dark: '#050816', panel: '#0f172a', accent: '#0ea5e9', leaf: '#22c55e', red: '#ef4444', yellow: '#eab308' }
-                    }
-                }
-            }
-        }
-    </script>
+input[type=range]:focus {
+outline: none;
+}
 
-    <style>
-        body {
-            background-color: #050816;
-            color: #cbd5e1;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-        }
+input[type=range]::-webkit-slider-thumb {
+-webkit-appearance: none;
+height: 14px;
+width: 14px;
+border-radius: 50%;
+background: #ef4444;
+cursor: pointer;
+margin-top: -5px;
+box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
 
-        /* Painéis mais compactos */
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
+input[type=range]::-webkit-slider-runnable-track {
+width: 100%;
+height: 4px;
+cursor: pointer;
+background: rgba(255, 255, 255, 0.1);
+border-radius: 2px;
+}
 
-        input[type=range] {
-            -webkit-appearance: none;
-            background: transparent;
-        }
+select {
+background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20
+20'%3e%3cpath stroke='%23cbd5e1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4
+4-4'/%3e%3c/svg%3e");
+background-position: right 0.5rem center;
+background-repeat: no-repeat;
+background-size: 1.2em 1.2em;
+-webkit-appearance: none;
+}
 
-        input[type=range]:focus {
-            outline: none;
-        }
+.animate-fade-in {
+animation: fadeIn 0.5s ease-out;
+}
 
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 14px;
-            width: 14px;
-            border-radius: 50%;
-            background: #ef4444;
-            cursor: pointer;
-            margin-top: -5px;
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-        }
+@keyframes fadeIn {
+from {
+opacity: 0;
+transform: translateY(10px);
+}
 
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-        }
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
 
-        select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23cbd5e1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.2em 1.2em;
-            -webkit-appearance: none;
-        }
+/* Adicione isso APÓS os estilos existentes no fatoresnovo3.html */
 
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
+/* --- MODO CLARO (LIGHT MODE) --- */
+html.light-mode body {
+background-color: #f1f5f9 !important;
+/* Fundo Claro */
+color: #1e293b !important;
+/* Texto Escuro */
+}
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
+html.light-mode .glass-panel {
+background: rgba(255, 255, 255, 0.85) !important;
+border: 1px solid #cbd5e1 !important;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+html.light-mode h2,
+html.light-mode h3,
+html.light-mode h4,
+html.light-mode #survival-title,
+html.light-mode #final-base,
+html.light-mode #val-time,
+html.light-mode #val-temp {
+color: #0f172a !important;
+/* Títulos pretos */
+}
 
-        /* Adicione isso APÓS os estilos existentes no fatoresnovo3.html */
+html.light-mode p,
+html.light-mode #survival-desc,
+html.light-mode .text-gray-400 {
+color: #475569 !important;
+/* Cinza médio */
+}
 
-        /* --- MODO CLARO (LIGHT MODE) --- */
-        html.light-mode body {
-            background-color: #f1f5f9 !important;
-            /* Fundo Claro */
-            color: #1e293b !important;
-            /* Texto Escuro */
-        }
+/* Ajuste nos inputs Range para ficarem visíveis no claro */
+html.light-mode input[type=range]::-webkit-slider-runnable-track {
+background: #cbd5e1 !important;
+}
 
-        html.light-mode .glass-panel {
-            background: rgba(255, 255, 255, 0.85) !important;
-            border: 1px solid #cbd5e1 !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-        }
+/* Ajuste no Select */
+html.light-mode select {
+color: #0f172a !important;
+background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20
+20'%3e%3cpath stroke='%230f172a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4
+4-4'/%3e%3c/svg%3e") !important;
+}
 
-        html.light-mode h2,
-        html.light-mode h3,
-        html.light-mode h4,
-        html.light-mode #survival-title,
-        html.light-mode #final-base,
-        html.light-mode #val-time,
-        html.light-mode #val-temp {
-            color: #0f172a !important;
-            /* Títulos pretos */
-        }
+html.light-mode select option {
+background-color: #ffffff !important;
+color: #0f172a !important;
+}
 
-        html.light-mode p,
-        html.light-mode #survival-desc,
-        html.light-mode .text-gray-400 {
-            color: #475569 !important;
-            /* Cinza médio */
-        }
+/* Ajuste das Badges e Botões Químicos */
+html.light-mode .chem-btn {
+background: #e2e8f0 !important;
+border-color: #cbd5e1 !important;
+color: #64748b !important;
+}
 
-        /* Ajuste nos inputs Range para ficarem visíveis no claro */
-        html.light-mode input[type=range]::-webkit-slider-runnable-track {
-            background: #cbd5e1 !important;
-        }
-
-        /* Ajuste no Select */
-        html.light-mode select {
-            color: #0f172a !important;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%230f172a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-        }
-
-        html.light-mode select option {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-        }
-
-        /* Ajuste das Badges e Botões Químicos */
-        html.light-mode .chem-btn {
-            background: #e2e8f0 !important;
-            border-color: #cbd5e1 !important;
-            color: #64748b !important;
-        }
-
-        html.light-mode .chem-btn:hover {
-            background: #cbd5e1 !important;
-            color: #0f172a !important;
-        }
-    </style>
+html.light-mode .chem-btn:hover {
+background: #cbd5e1 !important;
+color: #0f172a !important;
+}
+</style>
 </head>
 
 <body class="p-2 md:p-4 min-h-screen flex flex-col justify-start">
